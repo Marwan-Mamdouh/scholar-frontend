@@ -50,7 +50,7 @@ export default function CustomLink({
     };
 
     const baseStyles =
-        "text-lg leading-8 font-medium px-4 py-2 rounded-xl flex items-center justify-center transition-colors ease-in-out duration-300 shrink-0 gap-2";
+        "font-ui text-btn px-4 py-2 rounded-xl flex items-center justify-center transition-colors ease-in-out duration-300 shrink-0 gap-2";
     
     const pathname = usePathname();
 

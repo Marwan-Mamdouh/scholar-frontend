@@ -23,7 +23,7 @@ export default function Button({
 
   return (
     <button
-      className={`btn ${variantStyles[variant]} text-lg hover:from-20% leading-8 font-medium hover:cursor-pointer py-2 px-4 rounded-xl flex items-center justify-center transition-colors ease-in-out duration-300  ${props.className || ""} shrink-0 gap-2`}
+      className={`btn ${variantStyles[variant]} font-ui text-btn hover:from-20% hover:cursor-pointer py-2 px-4 rounded-xl flex items-center justify-center transition-colors ease-in-out duration-300  ${props.className || ""} shrink-0 gap-2`}
       {...props}
     >
       {children}
