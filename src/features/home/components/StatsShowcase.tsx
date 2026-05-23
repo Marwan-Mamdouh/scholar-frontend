@@ -1,15 +1,14 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 function useCountUp(end: number, duration = 2000) {
   const [count, setCount] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
+  const [element, setElement] = useState<HTMLSpanElement | null>(null);
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
+    if (!element) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !hasStarted) {
@@ -19,9 +18,9 @@ function useCountUp(end: number, duration = 2000) {
       },
       { threshold: 0.5 }
     );
-    observer.observe(el);
+    observer.observe(element);
     return () => observer.disconnect();
-  }, [hasStarted]);
+  }, [element, hasStarted]);
 
   useEffect(() => {
     if (!hasStarted) return;
@@ -40,56 +39,68 @@ function useCountUp(end: number, duration = 2000) {
     return () => cancelAnimationFrame(raf);
   }, [hasStarted, end, duration]);
 
-  return { count, ref };
+  return [count, setElement] as const;
 }
 
 export default function StatsShowcase() {
-  const companies = useCountUp(233, 2200);
-  const projects = useCountUp(31, 1800);
+  const [companiesCount, companiesRef] = useCountUp(233, 2200);
+  const [projectsCount, projectsRef] = useCountUp(31, 1800);
 
   return (
-    <section className="w-full bg-neutral-900 py-10 px-6 sm:px-12 md:px-20 lg:px-28">
-      <div className="max-w-4xl mx-auto">
-        <div className="w-full rounded-2xl backdrop-blur-md px-8 py-7 sm:px-10 sm:py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 sm:gap-8" style={{ background: "linear-gradient(to right, #2574A912 7%, #3EB4B121 13%)" }}>
-
-          {/* Left Block: Brand Accent & Title */}
-          <div className="flex flex-col space-y-1 shrink-0">
-            <span className="text-accent-300 font-sans text-sm font-semibold tracking-wider">
+    <section className="relative z-10 w-full bg-transparent px-6 py-10 sm:px-12 md:px-20 lg:px-28 lg:mb-0">
+      <div className="mx-auto max-w-3xl">
+        <div
+          className="flex w-full flex-col gap-6 rounded-2xl px-8 py-7 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:gap-8 sm:px-10 sm:py-8"
+          style={{
+            background:
+              "linear-gradient(90deg, rgba(37, 116, 169, 0.07) 0%, rgba(62, 180, 177, 0.13) 100%)",
+          }}
+        >
+          <div className="flex shrink-0 flex-col gap-1 items-center md:items-start">
+            <span className="font-sans text-caption font-medium leading-[1.25] tracking-normal text-accent-300">
               Powered By Innovation
             </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-50 tracking-tight">
+            <h2 className="font-sans text-h3 font-bold leading-[1.15] tracking-normal text-neutral-50 sm:text-h2-sm">
               Growth Insights
             </h2>
           </div>
 
-          {/* Divider */}
-          <div className="hidden sm:block w-px self-stretch bg-primary-600/50" />
+          <div className="hidden w-px self-stretch bg-primary-600/50 sm:block" />
 
-          {/* Right Block: Stats Columns */}
-          <div className="grid grid-cols-3 gap-8 sm:gap-12 items-center">
-            {/* Researches — no count, static dash */}
+          <div className="grid grid-cols-3 items-center gap-8 sm:gap-12">
             <div className="flex flex-col items-center text-center">
-              <span className="text-3xl sm:text-4xl font-extrabold text-neutral-50 tracking-tight">-</span>
-              <span className="text-xs sm:text-sm font-light text-neutral-300 mt-1 tracking-wide">Researches</span>
+              <span className="font-sans text-stat font-bold leading-none tracking-normal text-neutral-50">
+                -
+              </span>
+              <span className="mt-1 font-sans text-caption font-normal leading-[1.25] tracking-normal text-neutral-300">
+                Researches
+              </span>
             </div>
 
-            {/* Company — animated count */}
             <div className="flex flex-col items-center text-center">
-              <span ref={companies.ref} className="text-3xl sm:text-4xl font-extrabold text-neutral-50 tracking-tight">
-                {companies.count}+
+              <span
+                ref={companiesRef}
+                className="font-sans text-stat font-bold leading-none tracking-normal text-neutral-50"
+              >
+                {companiesCount}+
               </span>
-              <span className="text-xs sm:text-sm font-light text-neutral-300 mt-1 tracking-wide">Company</span>
+              <span className="mt-1 font-sans text-caption font-normal leading-[1.25] tracking-normal text-neutral-300">
+                Company
+              </span>
             </div>
 
-            {/* Project — animated count */}
             <div className="flex flex-col items-center text-center">
-              <span ref={projects.ref} className="text-3xl sm:text-4xl font-extrabold text-neutral-50 tracking-tight">
-                {projects.count}+
+              <span
+                ref={projectsRef}
+                className="font-sans text-stat font-bold leading-none tracking-normal text-neutral-50"
+              >
+                {projectsCount}+
               </span>
-              <span className="text-xs sm:text-sm font-light text-neutral-300 mt-1 tracking-wide">Project</span>
+              <span className="mt-1 font-sans text-caption font-normal leading-[1.25] tracking-normal text-neutral-300">
+                Project
+              </span>
             </div>
           </div>
-
         </div>
       </div>
     </section>

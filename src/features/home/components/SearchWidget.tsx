@@ -1,15 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { FiSearch, FiUser, FiBookOpen, FiBriefcase, FiArrowRight, FiTrendingUp } from "react-icons/fi";
+import { FiSearch, FiUser, FiBookOpen, FiBriefcase, FiTrendingUp } from "react-icons/fi";
 import Button from "@/src/components/Button";
 
 type TabType = "researchers" | "projects" | "challenges";
-
-interface Tag {
-  label: string;
-  query: string;
-}
 
 export default function SearchWidget() {
   const [activeTab, setActiveTab] = useState<TabType>("researchers");
