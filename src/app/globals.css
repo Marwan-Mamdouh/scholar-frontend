@@ -7,6 +7,8 @@
     --color-foreground: var(--foreground);
     --font-sans: var(--font-kanit-source);
     --font-mono: var(--font-geist-mono);
+    --font-kanit: var(--font-kanit-source);
+    --font-kadwa: var(--font-kadwa-source);
 
     /* Primary Colors */
     --color-primary-100: var(--color-primary-100);
