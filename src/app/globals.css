@@ -129,7 +129,7 @@
     --color-danger-800: #cf0d00;
 
     /* Original colors */
-    --background: #0a0a0a;
+    --background: var(--color-neutral-900);
     --foreground: #ededed;
 }
 
@@ -176,7 +176,7 @@
         --color-danger-800: #cf0d00;
 
         /* Original colors */
-        --background: #0a0a0a;
+        --background: var(--color-neutral-900);
         --foreground: #ededed;
     }
 }
