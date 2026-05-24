@@ -1,10 +1,10 @@
 @theme inline {
     --font-sans: var(--font-kanit-source);
     --font-mono: var(--font-geist-mono);
-    --font-kanit: var(--font-kanit-source);
-    --font-display: var(--font-kanit-source);
-    --font-ui: var(--font-kanit-source);
-    --font-body-alt: var(--font-kadwa-source);
+    --font-main: var(--font-kanit);
+    /* --font-display: var(--font-kanit-source);
+    --font-ui: var(--font-kanit-source); */
+    --font-secondary: var(--font-kadwa);
 
     --text-h1: 3rem;
     --text-h1--line-height: 1.05;

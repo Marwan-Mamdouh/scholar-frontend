@@ -9,13 +9,13 @@ const geistMono = Geist_Mono({
 });
 
 const kanit = Kanit({
-  variable: "--font-kanit-source",
+  variable: "--font-kanit",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
 
 const kadwa = Kadwa({
-  variable: "--font-kadwa-source",
+  variable: "--font-kadwa",
   subsets: ["latin"],
   weight: ["400", "700"],
 });
