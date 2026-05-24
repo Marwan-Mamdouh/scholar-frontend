@@ -53,7 +53,7 @@ const getSizeClasses = (variant: ButtonVariant, size: ButtonSize): string => {
 
 const getButtonClasses = ({ variant, intent, size = "md", disabled = false }: ButtonProps) => {
   const base =
-    "relative group overflow-hidden font-main hover:from-20% hover:cursor-pointer flex items-center justify-center transition-all ease-in-out duration-500";
+    "relative group overflow-hidden font-main hover:from-20% hover:cursor-pointer flex items-center justify-center transition-all ease-in-out duration-500 active:scale-95 ";
 
   const variants: Record<ButtonVariant, Record<ButtonIntent, string>> = {
     solid: {
