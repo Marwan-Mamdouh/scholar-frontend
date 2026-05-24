@@ -4,6 +4,7 @@ interface ButtonProps {
   variant: ButtonVariant;
   intent: ButtonIntent;
   size?: ButtonSize;
+  disabled?: boolean;
 }
 
 // Size scales per variant — each tuned for its visual role
@@ -50,8 +51,7 @@ const getSizeClasses = (variant: ButtonVariant, size: ButtonSize): string => {
   }
 };
 
-const getButtonClasses = ({ variant, intent, size = "md" }: ButtonProps) => {
-  // Base no longer carries px/py/rounded — those come from size
+const getButtonClasses = ({ variant, intent, size = "md", disabled = false }: ButtonProps) => {
   const base =
     "relative group overflow-hidden font-main hover:from-20% hover:cursor-pointer flex items-center justify-center transition-all ease-in-out duration-500";
 
@@ -91,8 +91,9 @@ const getButtonClasses = ({ variant, intent, size = "md" }: ButtonProps) => {
   };
 
   const sizeClasses = getSizeClasses(variant, size);
+  const disabledClasses = disabled ? "opacity-50 pointer-events-none cursor-default" : "";
 
-  return `${base} ${variants[variant][intent]} ${sizeClasses}`;
+  return `${base} ${variants[variant][intent]} ${sizeClasses} ${disabledClasses}`;
 };
 
 export default getButtonClasses;
