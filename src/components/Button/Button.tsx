@@ -26,7 +26,7 @@ const Button = ({
   return (
     <button
       {...rest}
-      className={`${getButtonClasses({ variant, intent, size })} ${textTransform}`}
+      className={`${getButtonClasses({ variant, intent, size, disabled: rest.disabled })} ${textTransform}`}
     >
       <span className="relative z-10 flex items-center justify-center gap-2">
         {iconLeft && (
@@ -35,7 +35,7 @@ const Button = ({
           </span>
         )}
         {children && (
-          <span className={`transition-all ease-in-out duration-500  `}>
+          <span className={`transition-all ease-in-out duration-500`}>
             {children}
           </span>
         )}
