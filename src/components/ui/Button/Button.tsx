@@ -28,7 +28,7 @@ const Button = ({
       {...rest}
       className={`${getButtonClasses({ variant, intent, size, disabled: rest.disabled })} ${textTransform}`}
     >
-      <span className="relative z-10 flex items-center justify-center gap-2">
+      <span className="relative z-10 flex items-center justify-center gap-1">
         {iconLeft && (
           <span className="group-hover:mr-2 transition-all ease-in-out duration-500">
             {iconLeft}
