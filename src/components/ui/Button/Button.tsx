@@ -1,16 +1,5 @@
-import { ReactNode, ButtonHTMLAttributes } from "react";
-import { ButtonIntent, ButtonSize, ButtonVariant } from "./button.type";
+import { ButtonProps } from "./button.type";
 import getButtonClasses, { getHoverOverlay } from "./button.style";
-
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant;
-  intent?: ButtonIntent;
-  size?: ButtonSize;
-  children?: ReactNode;
-  iconLeft?: ReactNode;
-  iconRight?: ReactNode;
-  textTransform?: "uppercase" | "lowercase" | "capitalize";
-}
 
 const Button = ({
   variant = "solid",
