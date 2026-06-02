@@ -1,6 +1,6 @@
 import { CardProps } from "./card.type";
 import getCardClasses, { getDescAndBtnClasses } from "./card.style";
-import { Button } from "../Button";
+import Button from "../Button/Button";
 import { Icon } from "@iconify/react";
 
 const Card = ({
