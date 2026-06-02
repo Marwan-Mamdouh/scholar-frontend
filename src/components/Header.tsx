@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import LogoIcon from "./Icons/Logo";
-import CustomLink from "./CustomLink";
 import ThemeIcon from "./Icons/Theme";
 import { Menu, X } from "lucide-react";
+import Button from "./ui/Button/Button";
 
 const navItems = [
   { label: "Home", href: "/" },
@@ -16,19 +16,16 @@ const navItems = [
 ];
 
 function MenuIcon({ className }: { className?: string }) {
-  return (
-    <Menu className={className} />
-  );
+  return <Menu className={className} />;
 }
 
 function CloseIcon({ className }: { className?: string }) {
-  return (
-    <X className={className} />
-  );
+  return <X className={className} />;
 }
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -57,15 +54,20 @@ export default function Header() {
             className="flex h-12.5 w-12.5 items-center justify-center rounded-xl text-neutral-300 transition-colors duration-200 hover:text-neutral-100 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-100"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
-            {isMenuOpen ? <CloseIcon className="h-8 w-8" /> : <MenuIcon className="h-8 w-8" />}
+            {isMenuOpen ? (
+              <CloseIcon className="h-8 w-8" />
+            ) : (
+              <MenuIcon className="h-8 w-8" />
+            )}
           </button>
         </div>
       </div>
 
       {/* Navigation and Actions */}
       <div
-        className={`${isMenuOpen ? "flex" : "hidden"
-          } mt-4 flex-col gap-4 lg:mt-0 lg:flex lg:flex-row lg:items-center lg:justify-between lg:gap-2.5 lg:flex-1 lg:pl-10`}
+        className={`${
+          isMenuOpen ? "flex" : "hidden"
+        } mt-4 flex-col gap-4 lg:mt-0 lg:flex lg:flex-row lg:items-center lg:justify-between lg:gap-2.5 lg:flex-1 lg:pl-10`}
       >
         <nav
           aria-label="Primary navigation"
@@ -79,10 +81,11 @@ export default function Header() {
                   : pathname.startsWith(item.href);
 
               const navLinkClassName =
-                `relative isolate flex h-12.5 items-center justify-start lg:justify-center overflow-visible rounded-xl px-4 lg:px-2.5 font-ui tracking-display capitalize transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-300 ${isActive
-                  ? "text-h3-sm text-neutral-50 bg-neutral-800/50 lg:bg-transparent"
-                  : "text-btn text-neutral-100 hover:text-neutral-50 hover:bg-neutral-800/30 lg:hover:bg-transparent"
-                  }`.trim();
+                `relative isolate flex h-12.5 items-center justify-start lg:justify-center overflow-visible rounded-xl px-4 lg:px-2.5 font-ui tracking-display capitalize transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-300 ${
+                  isActive
+                    ? "text-h3-sm text-neutral-50 bg-neutral-800/50 lg:bg-transparent"
+                    : "text-btn text-neutral-100 hover:text-neutral-50 hover:bg-neutral-800/30 lg:hover:bg-transparent"
+                }`.trim();
 
               return (
                 <li key={item.href} className="shrink-0">
@@ -108,16 +111,18 @@ export default function Header() {
 
         {/* Desktop actions and mobile login */}
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-2.5 lg:w-45 lg:justify-end border-t border-neutral-800 pt-4 lg:border-t-0 lg:pt-0">
-          <CustomLink
+          <Button
             aria-label="Log in"
             className="h-13.5 min-w-24 w-full lg:w-auto flex justify-center"
-            variant="primary"
-            outlined
-            href="/login"
-            onClick={() => setIsMenuOpen(false)}
+            intent="primary"
+            variant="outlined"
+            onClick={() => {
+              setIsMenuOpen(false);
+              router.push("/login");
+            }}
           >
             Login
-          </CustomLink>
+          </Button>
           <button
             aria-label="Toggle theme"
             className="hidden lg:flex h-13.5 w-13.5 items-center justify-center rounded-xl px-2 py-1 text-neutral-300 transition-colors duration-200 hover:text-neutral-100 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-100"
