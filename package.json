@@ -12,21 +12,21 @@
     "@iconify-icon/react": "^3.0.3",
     "@iconify-react/weui": "^1.0.2",
     "@iconify/react": "^6.0.2",
-    "lucide-react": "^1.16.0",
-    "next": "^16.2.6",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
+    "lucide-react": "^1.17.0",
+    "next": "^16.2.7",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
     "react-icons": "^5.6.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^25",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "^1.0.0",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.2",
+    "eslint": "^10",
+    "eslint-config-next": "16.2.7",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^6"
   }
 }
