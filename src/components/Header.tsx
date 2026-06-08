@@ -29,7 +29,7 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 flex min-h-21.5 w-full flex-col bg-neutral-900/50 px-6 py-6 backdrop-blur-[7.5px] sm:px-10 lg:h-21.5 lg:flex-row lg:items-center lg:justify-between lg:px-26 lg:py-3.5 overflow-hidden">
+    <header className="fixed top-0 left-0 z-50 flex min-h-21.5 w-full flex-col bg-neutral-900/50 px-6 py-6 backdrop-blur-[7.5px] sm:px-10 lg:h-21.5 lg:flex-row lg:items-center lg:justify-between lg:px-26 lg:py-3.5 overflow-hidden">
       <div className="flex w-full items-center justify-between lg:w-max">
         <Link
           aria-label="NEXUS home"
@@ -97,7 +97,7 @@ export default function Header() {
                     {isActive ? (
                       <span
                         aria-hidden="true"
-                        className="pointer-events-none absolute left-1/2 top-1/2 z-0 hidden h-[32px] w-[63px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent-400 blur-[50px] lg:block"
+                        className="pointer-events-none absolute left-1/2 top-1/2 z-0 hidden h-8 w-15.75 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent-400 blur-[50px] lg:block"
                       />
                     ) : null}
                     <span className="relative z-10">{item.label}</span>
