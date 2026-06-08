@@ -1,7 +1,7 @@
 import { LightingGlowVariant } from "./lightingGlow.type";
 
 const getLightingGlowClasses = (variant: LightingGlowVariant) => {
-  const base = "absolute inset-0 blur-[100px] rounded-full";
+  const base = "absolute inset-0 rounded-full";
 
   const variants: Record<LightingGlowVariant, string> = {
     primary: "bg-primary-300", // pick the shade you want
