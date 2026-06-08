@@ -13,7 +13,7 @@ const solidSizes: Record<ButtonSize, string> = {
   md:  "text-sm  py-1   px-3   rounded-xl  gap-1.5",
   lg:  "text-base py-1.5 px-4  rounded-xl  gap-2",
   xl:  "text-lg  py-2   px-5   rounded-2xl gap-2",
-  "2xl": "text-xl py-2.5 px-6  rounded-2xl gap-2.5",
+  "2xl": "text-xl py-2.5 px-6  rounded-xl gap-2.5",
 };
 
 const linkSizes: Record<ButtonSize, string> = {
@@ -38,7 +38,7 @@ const outlinedSizes: Record<ButtonSize, string> = {
   md:  "text-sm  py-1   px-3   rounded-xl",
   lg:  "text-base py-1.5 px-4  rounded-xl",
   xl:  "text-lg  py-2   px-5   rounded-2xl",
-  "2xl": "text-xl py-2.5 px-6  rounded-2xl",
+  "2xl": "text-xl py-2.5 px-6  rounded-xl",
 };
 
 const getSizeClasses = (variant: ButtonVariant, size: ButtonSize): string => {
