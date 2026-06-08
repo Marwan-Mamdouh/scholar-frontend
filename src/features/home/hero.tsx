@@ -3,7 +3,7 @@ import LightingGlow from "@/src/components/ui/LightingGlow/LightingGlow";
 
 const HeroSection = () => {
   return (
-    <section className="relative overflow-hidden bg-neutral-50 w-full min-h-130 lg:min-h-screen pt-6 pb-25 lg:pt-0 lg:pb-0">
+    <section className="relative overflow-hidden bg-neutral-900 w-full min-h-130 lg:min-h-screen pt-6 pb-25 lg:pt-0 lg:pb-0">
       {/* Desktop SVG waves - hidden on mobile */}
       <div
         aria-hidden="true"
