@@ -1,5 +1,6 @@
 import Link from "next/link";
 import LogoIcon from "./Icons/Logo";
+import Button from "./ui/Button/Button";
 
 const footerLinks = [
   { label: "Privacy Policy", href: "/privacy-policy" },
@@ -8,44 +9,44 @@ const footerLinks = [
 
 export default function Footer() {
   return (
-    <footer className="mt-auto w-full">
-      {/* Top accent gradient line */}
-      <div className="h-1 w-full bg-gradient-to-r from-accent-400 via-primary-400 to-accent-400" />
+    <footer className="mt-auto w-full py-3">
+      <div className="relative overflow-hidden">
+        {/* Gradient overlay layer */}
+        <div className="absolute inset-0 bg-linear-to-b from-[rgba(55,181,170,0.1)] to-[rgba(153,153,153,0)] backdrop-blur-xs" />
 
-      {/* Footer content */}
-      <div className="flex flex-col items-center gap-4 bg-gradient-to-b from-neutral-800 to-neutral-900 px-6 py-10 sm:py-8">
-        {/* Logo */}
-        <Link
-          href="/"
-          aria-label="NEXUS home"
-          className="flex items-center gap-2.5 text-primary-300"
-        >
-          <LogoIcon className="h-10 w-10 sm:h-8 sm:w-8" />
-          <span className="text-3xl font-bold tracking-wide sm:text-2xl">
-            NEXUS
-          </span>
-        </Link>
+        {/* Footer content */}
+        <div className="relative z-10 flex flex-col items-center gap-9 px-5.5 py-12.5">
+          {/* Logo */}
+          <Link
+            href="/"
+            aria-label="NEXUS home"
+            className="flex items-center gap-2.5"
+          >
+            <LogoIcon />
+          </Link>
 
-        {/* Links */}
-        <nav aria-label="Footer navigation">
-          <ul className="flex items-center gap-6">
-            {footerLinks.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className="text-sm text-neutral-200 transition-colors duration-200 hover:text-primary-300"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+          <div className="flex flex-col items-center gap-3">
+            {/* Links */}
+            <nav aria-label="Footer navigation">
+              <ul className="flex items-center gap-5">
+                {footerLinks.map((link) => (
+                  <li key={link.href}>
+                    <Link href={link.href}>
+                      <Button variant="link" intent="secondary" size="xl">
+                        {link.label}
+                      </Button>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
 
-        {/* Copyright */}
-        <p className="text-xs text-neutral-300">
-          &copy; 2026 Scholar Nexus. Our Team.
-        </p>
+            {/* Copyright */}
+            <p className="font-[kanit] text-sm text-neutral-200">
+              &copy; 2026 Scholar Nexus. Our Team.
+            </p>
+          </div>
+        </div>
       </div>
     </footer>
   );
