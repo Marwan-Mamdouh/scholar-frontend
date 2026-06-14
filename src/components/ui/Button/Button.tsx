@@ -9,13 +9,14 @@ const Button = ({
   iconLeft,
   iconRight,
   textTransform = "capitalize",
+  className = "",
   ...rest
 }: ButtonProps) => {
   const overlay = getHoverOverlay(intent, variant);
   return (
     <button
       {...rest}
-      className={`${getButtonClasses({ variant, intent, size, disabled: rest.disabled })} ${textTransform}`}
+      className={`${getButtonClasses({ variant, intent, size, disabled: rest.disabled })} ${textTransform} ${className}`}
     >
       <span className="relative z-10 flex items-center justify-center gap-1">
         {iconLeft && (
