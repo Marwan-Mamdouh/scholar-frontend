@@ -1,7 +1,22 @@
-import { CardProps } from "./card.type";
+import { ReactNode } from "react";
+import { CardVariant, CardIntent } from "./card.type";
 import getCardClasses, { getDescAndBtnClasses } from "./card.style";
 import Button from "../Button/Button";
 import { Icon } from "@iconify/react";
+
+interface CardProps {
+  variant?: CardVariant;
+  intent?: CardIntent;
+  icon?: ReactNode;
+  badge?: ReactNode;
+  callToAction?: string;
+  title?: string;
+  description?: string;
+  className?: string;
+  align?: "start" | "center" | "end";
+  clickable?: boolean;
+}
+
 
 const Card = ({
   intent = "primary",
