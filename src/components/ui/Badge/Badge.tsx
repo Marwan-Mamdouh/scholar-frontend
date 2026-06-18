@@ -1,5 +1,17 @@
-import { BadgeProps } from "./badge.type";
+import { ReactNode } from "react";
+import { BadgeVariant, BadgeIntent, BadgeSize } from "./badge.type";
 import getBadgeStyle from "./badge.style";
+
+export interface BadgeProps {
+  variant: BadgeVariant;
+  intent: BadgeIntent;
+  leftIcon?: ReactNode;
+  rightIcon?: ReactNode;
+  size?: BadgeSize;
+  children: ReactNode;
+  className?: string;
+  textTransform?: "uppercase" | "lowercase" | "capitalize";
+}
 
 const Badge = ({
   intent = "primary",
