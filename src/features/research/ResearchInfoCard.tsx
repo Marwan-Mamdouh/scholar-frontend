@@ -1,3 +1,4 @@
+import { User } from "@/src/components/Icons/User";
 import React from "react";
 
 export interface StatItem {
@@ -17,24 +18,22 @@ const ResearchInfoCard: React.FC<ResearchInfoCardProps> = ({
   stats,
 }) => {
   return (
-    <div className="w-full rounded-2xl bg-brand-gradient p-8 border border-[#34515e] flex flex-col gap-6">
+    <div className="w-full rounded-2xl bg-brand-gradient p-6 border border-[#34515e] flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h2 className="text-3xl font-bold text-white flex items-center gap-3">
-          {/* Icon will be added by the user here */}
+        <h2 className="text-3xl font-bold text-primary-200 flex items-center gap-2.5">
+          <User />
           {title}
         </h2>
-        <p className="text-neutral-200 text-lg">{description}</p>
+        <p className="text-neutral-50 text-lg">{description}</p>
       </div>
 
-      <div className="flex items-center gap-6 rounded-lg bg-neutral-800/50 p-4 border border-[#34515e]">
+      <div className="flex items-center gap-6 rounded-lg bg-white/10 p-3 border border-[#34515e]">
         {stats.map((stat, index) => (
-          <div key={index} className="flex items-center gap-2">
-            <span className="text-xl font-bold text-primary-300">
+          <div key={index} className="flex items-center gap-1">
+            <span className="text-2xl font-bold text-primary-300">
               {stat.value}
             </span>
-            <span className="text-neutral-200 font-medium text-sm">
-              {stat.label}
-            </span>
+            <span className="text-white font-medium text-sm">{stat.label}</span>
           </div>
         ))}
       </div>
