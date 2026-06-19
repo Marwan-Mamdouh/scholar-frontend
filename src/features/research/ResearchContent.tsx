@@ -1,6 +1,9 @@
 import React from "react";
 import { Input } from "@/src/components/ui/InputField/Input";
-import { FileSearch } from "lucide-react";
+import dynamic from "next/dynamic";
+import notFoundAnimation from "@/src/components/assets/NotFound.json";
+
+const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 export interface ResearchContentProps {
   activeTab: string;
@@ -33,18 +36,18 @@ const ResearchContent: React.FC<ResearchContentProps> = ({ activeTab }) => {
       </div>
 
       {/* Empty State */}
-      <div className="flex-1 flex flex-col items-center justify-center pt-8 pb-16">
-        <div className="text-white mb-6 bg-neutral-700/30 p-6 rounded-full border border-[#4d6e7c]">
-          <FileSearch
-            size={64}
-            className="text-primary-300"
-            strokeWidth={1.5}
+      <div className="flex-1 flex flex-col items-center justify-center pt-10.5 pb-16 gap-2.5">
+        <div className="relative flex items-center justify-center">
+          <Lottie
+            animationData={notFoundAnimation}
+            loop={true}
+            className="w-64 mx-auto"
           />
         </div>
-        <h3 className="text-2xl font-semibold text-primary-100 mb-2">
+        <h3 className="text-2xl font-semibold text-accent-300">
           Find What You're Looking For
         </h3>
-        <p className="text-neutral-400">
+        <p className="text-neutral-100">
           Choose Topics, Keywords, Or Universities To Begin Your Search.
         </p>
       </div>

@@ -53,11 +53,6 @@ const ResearchContainer = () => {
         stats={currentInfo.stats}
       />
 
-      <LightingGlow
-        variant="accent"
-        className="blur-[450px] -z-10 absolute top-[-40%] right-[-60%] scale-15"
-      />
-
       {/* Tabs */}
       <ResearchTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
