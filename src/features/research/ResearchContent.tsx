@@ -9,29 +9,52 @@ export interface ResearchContentProps {
   activeTab: string;
 }
 
+const CONTENT_DATA: Record<
+  string,
+  { filters: string[]; emptyTitle: string; emptyDesc: string }
+> = {
+  researchers: {
+    filters: ["Topics", "Research Fields", "Universities"],
+    emptyTitle: "Find What You're Looking For",
+    emptyDesc: "Choose Topics, Keywords, Or Universities To Begin Your Search.",
+  },
+  papers: {
+    filters: ["Year"],
+    emptyTitle: "Start Your Paper Search",
+    emptyDesc:
+      "Search by keywords, paste an abstract, or filter by year to find the most relevant research",
+  },
+  projects: {
+    filters: ["Universities", "Project Field", "Year", "Sponsorship"],
+    emptyTitle: "Find What You're Looking For",
+    emptyDesc: "Choose topics, keywords, or universities to begin your search.",
+  },
+};
+
 const ResearchContent: React.FC<ResearchContentProps> = ({ activeTab }) => {
+  const currentContent = CONTENT_DATA[activeTab] || CONTENT_DATA.researchers;
+
   return (
-    <div className="w-full bg-transparent border border-[#4d6e7c] rounded-b-2xl rounded-tr-2xl p-6 min-h-[400px] flex flex-col gap-12 relative -mt-px">
+    <div className="w-full bg-transparent border border-[#4d6e7c] rounded-b-2xl rounded-tr-2xl p-6 min-h-100 flex flex-col gap-12 relative -mt-px">
       {/* Top action bar */}
       <div className="flex gap-4 items-center flex-wrap">
-        <div className="w-[300px]">
+        <div className="w-75">
           <Input
             label="TEST"
             placeholder={`Search by ${activeTab === "researchers" ? "Researcher" : activeTab === "papers" ? "Paper" : "Project"} Name`}
           />
         </div>
 
-        {/* Placeholder for Dropdowns as requested */}
+        {/* Dropdowns */}
         <div className="flex gap-2">
-          <button className="px-4 py-2 rounded-full border border-[#4d6e7c] text-neutral-300 text-sm flex items-center gap-2">
-            Topics <span className="text-[10px]">▼</span>
-          </button>
-          <button className="px-4 py-2 rounded-full border border-[#4d6e7c] text-neutral-300 text-sm flex items-center gap-2">
-            Research Fields <span className="text-[10px]">▼</span>
-          </button>
-          <button className="px-4 py-2 rounded-full border border-[#4d6e7c] text-neutral-300 text-sm flex items-center gap-2">
-            Universities <span className="text-[10px]">▼</span>
-          </button>
+          {currentContent.filters.map((filter) => (
+            <button
+              key={filter}
+              className="px-4 py-2 rounded-full border border-[#4d6e7c] text-neutral-300 text-sm flex items-center gap-2"
+            >
+              {filter} <span className="text-[10px]">▼</span>
+            </button>
+          ))}
         </div>
       </div>
 
@@ -45,10 +68,10 @@ const ResearchContent: React.FC<ResearchContentProps> = ({ activeTab }) => {
           />
         </div>
         <h3 className="text-2xl font-semibold text-accent-300">
-          Find What You're Looking For
+          {currentContent.emptyTitle}
         </h3>
         <p className="text-neutral-100">
-          Choose Topics, Keywords, Or Universities To Begin Your Search.
+          {currentContent.emptyDesc}
         </p>
       </div>
     </div>
