@@ -1,4 +1,5 @@
 import { User } from "@/src/components/Icons/User";
+import LightingGlow from "@/src/components/ui/LightingGlow/LightingGlow";
 import React from "react";
 
 export interface StatItem {
@@ -18,7 +19,7 @@ const ResearchInfoCard: React.FC<ResearchInfoCardProps> = ({
   stats,
 }) => {
   return (
-    <div className="w-full rounded-2xl bg-brand-gradient p-6 border border-[#34515e] flex gap-6">
+    <div className="relative z-0 w-full rounded-2xl bg-brand-gradient p-6 border border-[#34515e] flex gap-6 overflow-hidden">
       <div className="w-2 rounded-full bg-primary-200 shrink-0" />
       <div className="flex flex-col gap-6 w-full">
         <div className="flex flex-col gap-2">
@@ -35,7 +36,9 @@ const ResearchInfoCard: React.FC<ResearchInfoCardProps> = ({
               <span className="text-2xl font-bold text-primary-300">
                 {stat.value}
               </span>
-              <span className="text-white font-medium text-sm">{stat.label}</span>
+              <span className="text-white font-medium text-sm">
+                {stat.label}
+              </span>
             </div>
           ))}
         </div>
