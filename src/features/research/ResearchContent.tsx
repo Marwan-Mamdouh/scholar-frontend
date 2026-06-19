@@ -11,7 +11,7 @@ export interface ResearchContentProps {
 
 const ResearchContent: React.FC<ResearchContentProps> = ({ activeTab }) => {
   return (
-    <div className="w-full bg-neutral-800 border border-[#4d6e7c] rounded-b-2xl rounded-tr-2xl p-6 min-h-[400px] flex flex-col gap-12 relative -mt-px">
+    <div className="w-full bg-transparent border border-[#4d6e7c] rounded-b-2xl rounded-tr-2xl p-6 min-h-[400px] flex flex-col gap-12 relative -mt-px">
       {/* Top action bar */}
       <div className="flex gap-4 items-center flex-wrap">
         <div className="w-[300px]">

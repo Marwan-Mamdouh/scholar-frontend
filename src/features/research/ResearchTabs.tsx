@@ -20,21 +20,21 @@ const ResearchTabs: React.FC<ResearchTabsProps> = ({
   ];
 
   return (
-    <div className="flex w-full items-end gap-2 mt-8 z-10 relative">
+    <div className="flex w-full items-end gap-0.5 mt-8 z-10 relative">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         return (
-          <button
+          <span
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`px-8 py-3 rounded-t-xl transition-all font-semibold ${
+            className={`px-14.5 py-1.5 rounded-t-xl transition-all font-normal text-lg ${
               isActive
-                ? "bg-neutral-800 text-white border-t border-l border-r border-[#4d6e7c] border-b-0"
-                : "bg-[#113145] text-neutral-300 hover:text-white hover:bg-neutral-700 border-transparent"
+                ? "bg-transparent text-accent-200 border-t-4 border-x border-accent-200 font-semibold"
+                : "bg-accent-700 text-neutral-50 hover:text-accent-200 hover:border-t-4 hover:border-x hover:border-accent-200"
             }`}
           >
             {tab.label}
-          </button>
+          </span>
         );
       })}
     </div>

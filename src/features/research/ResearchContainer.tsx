@@ -4,7 +4,6 @@ import { useState } from "react";
 import ResearchTabs, { TabType } from "./ResearchTabs";
 import ResearchInfoCard, { ResearchInfoCardProps } from "./ResearchInfoCard";
 import ResearchContent from "./ResearchContent";
-import LightingGlow from "@/src/components/ui/LightingGlow/LightingGlow";
 
 const RESEARCH_DATA: Record<TabType, ResearchInfoCardProps> = {
   researchers: {
@@ -18,24 +17,14 @@ const RESEARCH_DATA: Record<TabType, ResearchInfoCardProps> = {
     ],
   },
   papers: {
-    title: "Explore Papers",
+    title: "Discover Academic Papers",
     description:
-      "Discover ground-breaking academic papers and research across various disciplines",
-    stats: [
-      { label: "Papers", value: "12k+" },
-      { label: "Citations", value: "45k+" },
-      { label: "Journals", value: 120 },
-    ],
+      " Explore academic papers and citation networks across top journals and research platforms.",
   },
   projects: {
-    title: "Explore Projects",
+    title: "Explore Graduation Projects",
     description:
-      "Find real-world research projects and collaborative initiatives worldwide",
-    stats: [
-      { label: "Projects", value: 342 },
-      { label: "Institutions", value: 156 },
-      { label: "Funding", value: "$12M+" },
-    ],
+      "Discover real student projects, explore ideas, and get inspired for your own work",
   },
 };
 
