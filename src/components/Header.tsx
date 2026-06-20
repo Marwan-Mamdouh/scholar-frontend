@@ -80,7 +80,7 @@ export default function Header() {
                   : pathname.startsWith(item.href);
 
               const navLinkClassName =
-                `relative isolate flex h-12.5 items-center justify-start lg:justify-center overflow-visible rounded-xl px-4 lg:px-2.5 font-ui tracking-display capitalize transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-300 ${
+                `relative isolate flex h-12.5 items-center justify-start lg:justify-center overflow-visible rounded-xl px-4 lg:px-2.5 font-main tracking-display capitalize transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-300 ${
                   isActive
                     ? "text-h3-sm text-neutral-50 bg-neutral-800/50 lg:bg-transparent"
                     : "text-btn text-neutral-100 hover:text-neutral-50 hover:bg-neutral-800/30 lg:hover:bg-transparent"
