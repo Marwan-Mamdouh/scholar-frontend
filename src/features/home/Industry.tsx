@@ -26,17 +26,17 @@ const cards = [
 
 const Industry = () => {
   return (
-    <div className="mx-auto w-full max-w-7xl px-5 lg:items-start lg:pt-25 lg:pb-13.5 lg:px-30.25 gap-2.5">
+    <div className="mx-auto flex flex-col w-full lg:w-316.25 px-5 py-6 lg:items-start lg:pt-25 lg:pb-13.5 gap-2.5 overflow-hidden">
       <div className="flex flex-col gap-2.5 max-w-316.25">
-        <p className="font-main text-primary-200 text-h2 capitalize tracking-eyebrow">
+        <p className="font-main font-normal text-primary-200 text-h2-sm lg:text-h2 capitalize">
           expolre the industry
         </p>
-        <p className="font-main font-normal capitalize text-neutral-100 text-eyebrow lg:text-[24px]">
-          Discover companies and find the right opportunity to start your
+        <p className="font-main font-normal text-neutral-100 text-eyebrow lg:text-[24px]">
+          discover companies and find the right opportunity to start your
           career.
         </p>
       </div>
-      <div className="flex flex-col justify-around mx-auto lg:flex-row gap-15 max-w-316.25 p-2.5">
+      <div className="flex flex-col mx-auto w-full lg:flex-row lg:gap-15 gap-2.5 max-w-316.25 py-2.5 lg:p-2.5">
         {cards.map((card, index) => (
           <Card
             key={index}
