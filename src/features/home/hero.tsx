@@ -3,7 +3,7 @@ import LightingGlow from "@/src/components/ui/LightingGlow/LightingGlow";
 
 const HeroSection = () => {
   return (
-    <section className="relative overflow-hidden bg-neutral-900 w-full min-h-[calc(10svh-5.375rem)] py-25 lg:min-h-0 lg:pt-0 lg:pb-0">
+    <section className="relative overflow-hidden bg-neutral-900 w-full min-h-[calc(10svh-5.375rem)] py-25 lg:min-h-0 lg:pt-0 lg:pb-20">
       {/* Desktop SVG waves - hidden on mobile/tablet */}
       <div className="hidden lg:block relative w-full aspect-1619/634 overflow-hidden">
         <svg
@@ -68,16 +68,16 @@ const HeroSection = () => {
         aria-hidden="true"
       >
         <div className="absolute top-[30%] left-[-4%] w-34 h-16.25">
-          <LightingGlow variant="primary" className="blur-[90px] opacity-80" />
+          <LightingGlow variant="primary" className="blur-[85px]" />
         </div>
         <div className="absolute top-[40%] right-[-3%] w-36.75 h-16.75">
-          <LightingGlow variant="accent" className="blur-[90px] opacity-80" />
+          <LightingGlow variant="accent" className="blur-[85px]" />
         </div>
       </div>
 
       {/* Text content */}
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-5 lg:absolute lg:inset-0 lg:flex lg:items-start lg:pt-41.25 lg:pl-30.25 lg:pr-5">
-        <div className="flex flex-col gap-2.5 lg:gap-5.75 max-w-191.25">
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pt-6 lg:absolute lg:inset-0 lg:flex lg:items-start lg:pt-41.25">
+        <div className="flex flex-col gap-6 lg:gap-5.75 max-w-191.25">
           <p className="font-secondary font-normal capitalize text-accent-400 text-eyebrow tracking-eyebrow lg:text-[24px]">
             Scholar Nexus
           </p>
@@ -86,7 +86,7 @@ const HeroSection = () => {
             Join To Connect And Advance Research
           </h1>
 
-          <p className="font-secondary font-normal text-neutral-100 text-subtext tracking-display w-full lg:text-[20px]">
+          <p className="font-secondary font-normal text-neutral-100 text-subtext leading-loose tracking-[5%] w-full lg:text-[20px]">
             Bringing Academia And Industry Together. Connect, Explore Projects,
             And Unlock Opportunities.
           </p>

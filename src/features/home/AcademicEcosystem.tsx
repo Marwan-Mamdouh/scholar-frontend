@@ -31,7 +31,7 @@ const cards2 = [
 
 const AcademicEcosystem = () => {
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-2.5 px-2.5">
       {/* globe icon for mobile */}
       <div className="block lg:hidden">
         <GlobeIcon
@@ -40,7 +40,7 @@ const AcademicEcosystem = () => {
         />
       </div>
       {/* text content - title and description */}
-      <div className="flex flex-col items-center justify-center text-center mx-auto w-full max-w-90 md:max-w-194.75 p-2.5 gap-2.5">
+      <div className="flex flex-col items-center justify-center text-center mx-auto w-full max-w-90 lg:max-w-194.75 p-2.5 gap-2.5">
         <p className="font-main font-bold capitalize text-h2-sm lg:text-h1-sm tracking-display">
           Explore the Academic Ecosystem
         </p>
@@ -49,7 +49,7 @@ const AcademicEcosystem = () => {
         </p>
       </div>
       {/* cards container */}
-      <div className="relative flex flex-col gap-2.5 md:gap-16.5 mx-auto w-full max-w-311.25 md:my-15 px-2.5">
+      <div className="relative flex flex-col gap-2.5 lg:gap-16.5 mx-auto w-full max-w-311.25 lg:my-15 px-2.5">
         {/* lighting glow for mobile - first one - primary */}
         <div className="block absolute top-[-7%] right-[48%] w-73.5 h-54 lg:hidden">
           <LightingGlow variant="primary" className="blur-[150px]" />
