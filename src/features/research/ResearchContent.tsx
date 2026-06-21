@@ -37,7 +37,7 @@ const ResearchContent: React.FC<ResearchContentProps> = ({ activeTab }) => {
   return (
     <div className="w-full bg-transparent border-2 border-accent-200 rounded-b-2xl rounded-tr-2xl p-6 min-h-100 flex flex-col gap-12 relative -mt-px">
       {/* Top action bar */}
-      <div className="flex gap-4 items-center flex-wrap">
+      <div className="flex gap-4 items-center">
         <div className="w-75">
           <Input
             label="TEST"
