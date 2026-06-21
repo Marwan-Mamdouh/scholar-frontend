@@ -9,7 +9,7 @@ const footerLinks = [
 
 export default function Footer() {
   return (
-    <footer className="mt-auto w-full py-3">
+    <footer className="mt-auto w-full">
       <div className="relative overflow-hidden">
         {/* Gradient overlay layer */}
         <div className="absolute inset-0 bg-linear-to-b from-[rgba(55,181,170,0.1)] to-[rgba(153,153,153,0)] backdrop-blur-xs" />
