@@ -25,11 +25,11 @@ const ResearchInfoCard: React.FC<ResearchInfoCardProps> = ({
     if (title.includes("Projects")) return <Browser />;
   };
   return (
-    <div className="relative z-0 w-full rounded-2xl bg-brand-gradient p-6 border border-[#34515e] flex gap-6 overflow-hidden">
+    <div className="relative z-0 w-full rounded-2xl bg-brand-gradient p-6 border border-[#34515e] flex flex-col md:flex-row gap-6 overflow-hidden">
       <div className="w-2 rounded-full bg-primary-200 shrink-0" />
       <div className="flex flex-col gap-6 w-full">
         <div className="flex flex-col gap-2">
-          <h2 className="text-3xl font-bold text-primary-200 flex items-center gap-2.5">
+          <h2 className="text-2xl md:text-3xl font-bold text-primary-200 flex items-center gap-2.5">
             {renderIcon()}
             {title}
           </h2>
@@ -37,7 +37,7 @@ const ResearchInfoCard: React.FC<ResearchInfoCardProps> = ({
         </div>
 
         {stats && (
-          <div className="flex items-center gap-6 rounded-lg bg-white/10 p-3 border border-[#34515e]">
+          <div className="flex items-start md:items-center flex-col md:flex-row gap-6 rounded-lg bg-white/10 p-3 border border-[#34515e]">
             {stats?.map((stat, index) => (
               <div key={index} className="flex items-center gap-1">
                 <span className="text-2xl font-bold text-primary-300">
