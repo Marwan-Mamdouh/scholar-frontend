@@ -27,7 +27,7 @@ const ResearchTabs: React.FC<ResearchTabsProps> = ({
           <span
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`px-14.5 py-1.5 rounded-t-xl transition-all font-normal text-lg ${
+            className={`flex-1 text-center sm:flex-none px-1 sm:px-14.5 py-1.5 rounded-t-xl transition-all font-normal text-sm sm:text-lg ${
               isActive
                 ? "bg-transparent text-accent-200 border-t-4 border-x border-accent-200 font-semibold"
                 : "bg-accent-700 text-neutral-50 hover:text-accent-200 cursor-pointer"
