@@ -3,10 +3,12 @@ import { CardVariant, CardIntent } from "./card.type";
 import getCardClasses, { getDescAndBtnClasses } from "./card.style";
 import Button from "../Button/Button";
 import { Icon } from "@iconify/react";
+import { ButtonIntent } from "../Button/button.type";
 
 interface CardProps {
   variant?: CardVariant;
   intent?: CardIntent;
+  btnIntent?: ButtonIntent
   icon?: ReactNode;
   badge?: ReactNode;
   callToAction?: string;
@@ -21,6 +23,7 @@ interface CardProps {
 const Card = ({
   intent = "primary",
   variant = "solid",
+  btnIntent = intent,
   icon,
   badge,
   title = "card title",
@@ -30,7 +33,7 @@ const Card = ({
   align = "start",
   clickable = false,
 }: CardProps) => {
-  const { btnIntent, descColor } = getDescAndBtnClasses(variant, intent);
+  const { descColor } = getDescAndBtnClasses(variant, intent);
   return (
     <div
       tabIndex={clickable ? 0 : undefined}
@@ -43,7 +46,7 @@ const Card = ({
         </div>
       )}
 
-      <div className=" ">
+      <div className="flex flex-col gap-2.5">
         {title && (
           <h2 className="text-2xl capitalize text-neutral-50">{title}</h2>
         )}

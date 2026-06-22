@@ -29,6 +29,9 @@ const cards2 = [
   },
 ];
 
+const acadicCardsClassName =
+  "flex-1 flex-col w-full items-start lg:max-w-126.25 lg:max-h-45.5 p-5!";
+
 const AcademicEcosystem = () => {
   return (
     <div className="flex flex-col gap-2.5 px-2.5">
@@ -67,7 +70,8 @@ const AcademicEcosystem = () => {
               description={card.description}
               callToAction={card.cardAction}
               intent="primary"
-              className="flex-1 flex-col w-full items-start justify-center lg:max-w-126.25 lg:h-45.5"
+              btnIntent="accent"
+              className={acadicCardsClassName}
             />
           ))}
         </div>
@@ -88,7 +92,8 @@ const AcademicEcosystem = () => {
               description={card.description}
               callToAction={card.cardAction}
               intent="primary"
-              className="flex-1 flex-col w-full items-start justify-center lg:max-w-126.25 lg:h-45.5"
+              btnIntent="accent"
+              className={acadicCardsClassName}
             />
           ))}
         </div>
