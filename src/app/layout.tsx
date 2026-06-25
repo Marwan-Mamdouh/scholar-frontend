@@ -37,7 +37,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistMono.variable} ${kanit.variable} ${kadwa.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col overflow-x-hidden">
         <Header />
         {children}
         <Footer />

@@ -10,10 +10,13 @@
   },
   "dependencies": {
     "@iconify-icon/react": "^3.0.3",
+    "@iconify-react/lucide": "^1.0.20",
+    "@iconify-react/mdi": "^1.0.2",
     "@iconify-react/weui": "^1.0.2",
     "@iconify/react": "^6.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "lottie-react": "^2.4.1",
     "lucide-react": "^1.17.0",
     "next": "^16.2.9",
     "react": "19.2.7",
