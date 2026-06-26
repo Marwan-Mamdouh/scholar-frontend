@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@iconify-icon/react": "^3.0.3",
+    "@iconify-react/carbon": "^1.0.6",
+    "@iconify-react/icons8": "^1.0.2",
     "@iconify-react/lucide": "^1.0.20",
-    "@iconify-react/mdi": "^1.0.2",
+    "@iconify-react/streamline-freehand": "^1.0.2",
     "@iconify-react/weui": "^1.0.2",
     "@iconify/react": "^6.0.2",
     "@lottiefiles/dotlottie-react": "^0.19.5",
