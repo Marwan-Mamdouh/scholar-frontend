@@ -1,10 +1,12 @@
 "use client";
-import * as React from "react";
+
+import { ComponentRef, forwardRef, useState } from "react";
 import { InputProps } from "./input.type";
-import { Eye, EyeOff } from "lucide-react";
+import EyeIcon from "@iconify-react/mdi/eye";
+import EyeOffIcon from "@iconify-react/mdi/eye-off";
 import { iconVariants, inputVariants, labelVariants } from "./input.style";
 
-export const Input = React.forwardRef<React.ElementRef<"input">, InputProps>(
+export const Input = forwardRef<ComponentRef<"input">, InputProps>(
   (
     {
       label,
@@ -20,7 +22,7 @@ export const Input = React.forwardRef<React.ElementRef<"input">, InputProps>(
     },
     ref,
   ) => {
-    const [showPassword, setShowPassword] = React.useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const isPassword = type === "password";
 
@@ -61,7 +63,7 @@ export const Input = React.forwardRef<React.ElementRef<"input">, InputProps>(
           )}
 
           {hasRightIcon && (
-            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+            <div className="absolute right-0 top-1/2 -translate-y-1/2">
               {isPassword ? (
                 <button
                   type="button"
@@ -69,7 +71,11 @@ export const Input = React.forwardRef<React.ElementRef<"input">, InputProps>(
                   onClick={() => setShowPassword((v) => !v)}
                   className={iconVariants({ variant: variant })}
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showPassword ? (
+                    <EyeOffIcon height="1.25rem" />
+                  ) : (
+                    <EyeIcon height="1.25rem" />
+                  )}
                 </button>
               ) : (
                 <div className={iconVariants({ variant: variant })}>
