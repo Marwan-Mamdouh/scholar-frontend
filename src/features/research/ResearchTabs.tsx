@@ -1,18 +1,14 @@
 "use client";
 
-import React from "react";
-
-export type TabType = "researchers" | "papers" | "projects";
+import { FC } from "react";
+import { TabType } from "./Research.type";
 
 interface ResearchTabsProps {
   activeTab: TabType;
   onTabChange: (tab: TabType) => void;
 }
 
-const ResearchTabs: React.FC<ResearchTabsProps> = ({
-  activeTab,
-  onTabChange,
-}) => {
+const ResearchTabs: FC<ResearchTabsProps> = ({ activeTab, onTabChange }) => {
   const tabs: { id: TabType; label: string }[] = [
     { id: "researchers", label: "Researchers" },
     { id: "papers", label: "Papers" },

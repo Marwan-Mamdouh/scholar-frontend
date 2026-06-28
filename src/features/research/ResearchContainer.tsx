@@ -1,9 +1,7 @@
-"use client";
-
-import { useState } from "react";
-import ResearchTabs, { TabType } from "./ResearchTabs";
+import ResearchTabsClient from "./ResearchTabsClient";
 import ResearchInfoCard, { ResearchInfoCardProps } from "./ResearchInfoCard";
 import ResearchContent from "./ResearchContent";
+import { TabType } from "./Research.type";
 
 const RESEARCH_DATA: Record<TabType, ResearchInfoCardProps> = {
   researchers: {
@@ -28,9 +26,7 @@ const RESEARCH_DATA: Record<TabType, ResearchInfoCardProps> = {
   },
 };
 
-const ResearchContainer = () => {
-  const [activeTab, setActiveTab] = useState<TabType>("researchers");
-
+const ResearchContainer = ({ activeTab }: { activeTab: TabType }) => {
   const currentInfo = RESEARCH_DATA[activeTab];
 
   return (
@@ -43,7 +39,7 @@ const ResearchContainer = () => {
       />
 
       {/* Tabs */}
-      <ResearchTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      <ResearchTabsClient activeTab={activeTab} />
 
       {/* Content */}
       <ResearchContent activeTab={activeTab} />

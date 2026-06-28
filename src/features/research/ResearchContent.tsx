@@ -1,3 +1,5 @@
+"use client";
+
 import { FC } from "react";
 import { Input } from "@/src/components/ui/InputField/Input";
 import dynamic from "next/dynamic";

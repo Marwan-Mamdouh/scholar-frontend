@@ -1,7 +1,7 @@
 import { User } from "@/src/components/Icons/User";
 import { Document } from "@/src/components/Icons/Document";
 import { Browser } from "@/src/components/Icons/Browser";
-import React from "react";
+import { FC } from "react";
 
 export interface StatItem {
   label: string;
@@ -14,7 +14,7 @@ export interface ResearchInfoCardProps {
   stats?: StatItem[];
 }
 
-const ResearchInfoCard: React.FC<ResearchInfoCardProps> = ({
+const ResearchInfoCard: FC<ResearchInfoCardProps> = ({
   title,
   description,
   stats,
