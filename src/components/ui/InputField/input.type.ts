@@ -5,7 +5,7 @@ export type InputProps = Omit<
   React.ComponentPropsWithoutRef<"input">,
   "size"
 > & {
-  label: string;
+  label?: string;
   error?: string;
   success?: string;
   startAdornment?: React.ReactNode;
