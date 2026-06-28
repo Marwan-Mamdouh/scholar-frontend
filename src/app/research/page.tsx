@@ -1,9 +1,8 @@
-import React from "react";
 import ResearchContainer from "@/src/features/research/ResearchContainer";
 
 export default function ResearchPage() {
   return (
-    <main className="flex-1 w-full flex flex-col items-end relative overflow-hidden pt-10">
+    <main className="flex-1 w-full flex flex-col items-end relative overflow-hidden pt-10 font-main">
       {/* Hero Section */}
       <section className="w-full pt-26 pb-8 px-4 flex flex-col items-center text-center gap-2">
         <h1 className="text-4xl md:text-5xl font-bold text-neutral-50 tracking-tight">
