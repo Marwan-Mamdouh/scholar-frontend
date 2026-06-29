@@ -6,13 +6,13 @@ interface ResearchTabsProps {
   onTabChange: (tab: TabType) => void;
 }
 
-const ResearchTabs: FC<ResearchTabsProps> = ({ activeTab, onTabChange }) => {
-  const tabs: { id: TabType; label: string }[] = [
-    { id: "researchers", label: "Researchers" },
-    { id: "papers", label: "Papers" },
-    { id: "projects", label: "Projects" },
-  ];
+const tabs: { id: TabType; label: string }[] = [
+  { id: "researchers", label: "Researchers" },
+  { id: "papers", label: "Papers" },
+  { id: "projects", label: "Projects" },
+];
 
+const ResearchTabs: FC<ResearchTabsProps> = ({ activeTab, onTabChange }) => {
   return (
     <div className="flex w-full items-end gap-0.5 mt-7 z-10 relative">
       {tabs.map((tab) => {
