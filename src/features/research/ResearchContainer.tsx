@@ -30,7 +30,7 @@ const ResearchContainer = ({ activeTab }: { activeTab: TabType }) => {
   const currentInfo = RESEARCH_DATA[activeTab];
 
   return (
-    <div className="w-full max-w-6xl mx-auto flex flex-col pt-8 pb-24 px-4 md:px-8">
+    <div className="w-full max-w-7xl mx-auto flex flex-col pt-8 pb-24 px-4 md:px-8 tracking-eyebrow">
       {/* Info Card */}
       <ResearchInfoCard
         title={currentInfo.title}
