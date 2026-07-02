@@ -2,6 +2,7 @@ import React from "react";
 import AboutTitle from "./AboutTitle";
 import Pillars from "./Pillars";
 import WhyNexus from "./WhyNexus";
+import MeetOurTeam from "./MeetOurTeam";
 
 export default function AboutSection() {
   return (
@@ -9,6 +10,7 @@ export default function AboutSection() {
       <AboutTitle />
       <Pillars />
       <WhyNexus/>
+      <MeetOurTeam/>
     </div>
   );
 }
