@@ -7,6 +7,8 @@ import { Input } from "@/src/components/ui/InputField/Input";
 import Button from "@/src/components/ui/Button/Button";
 import { useForm, Controller, SubmitHandler } from "react-hook-form";
 import { ContactData, ContactsList } from "./about.type";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { contactSchema } from "./contact.schema";
 
 const contacts: ContactsList[] = [
   {
@@ -27,7 +29,12 @@ const contacts: ContactsList[] = [
 ];
 
 export default function Contact() {
-  const { control, handleSubmit } = useForm({
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ContactData>({
+    resolver: zodResolver(contactSchema),
     defaultValues: {
       name: "",
       email: "",
@@ -84,6 +91,7 @@ export default function Contact() {
                 label="Name"
                 required
                 placeholder="enter your name"
+                error={errors.message?.message}
                 {...field}
               />
             )}
@@ -97,6 +105,7 @@ export default function Contact() {
                 label="Email"
                 required
                 placeholder="enter your email"
+                error={errors.message?.message}
                 {...field}
               />
             )}
@@ -110,6 +119,7 @@ export default function Contact() {
                 label="Message"
                 required
                 placeholder="Write your message here and I’ll get back to you soon."
+                error={errors.message?.message}
                 {...field}
               />
             )}
