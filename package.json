@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.4.0",
     "@iconify-icon/react": "^3.0.3",
     "@iconify-react/basil": "^1.0.2",
     "@iconify-react/carbon": "^1.0.6",
