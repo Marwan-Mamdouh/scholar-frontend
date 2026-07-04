@@ -69,6 +69,8 @@ export const Input = forwardRef<ComponentRef<"input">, InputProps>(
                   type="button"
                   disabled={disabled}
                   onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  title={showPassword ? "Hide password" : "Show password"}
                   className={iconVariants({ variant: variant })}
                 >
                   {showPassword ? (
