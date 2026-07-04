@@ -1,16 +1,10 @@
 "use client";
-import React from "react";
 import UnlockIcon from "@iconify-react/lucide/unlock";
 import IbmWatsonDiscoveryIcon from "@iconify-react/carbon/ibm-watson-discovery";
 import CollaborationTeamChatIcon from "@iconify-react/streamline-freehand/collaboration-team-chat";
 import IdeaIcon from "@iconify-react/icons8/idea";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-
-type Feature = {
-  icon: React.ElementType;
-  title: string;
-  description: string;
-};
+import { Feature } from "./about.type";
 
 const features: Feature[] = [
   {
@@ -38,15 +32,17 @@ const features: Feature[] = [
 export default function WhyNexus() {
   return (
     <div className="flex flex-col lg:flex-row items-center gap-2 ">
-      <DotLottieReact
-        src="https://lottie.host/dfe4cfa0-0e01-4eac-a0c8-753707905f4f/Wn5mxvk8Xd.lottie"
-        loop
-        autoplay
-        className="w-220 h-90 lg:w-[50%] md:h-full relative md:translate-x-0"
-      />
+      <div className="w-full lg:w-1/2">
+        <DotLottieReact
+          src="https://lottie.host/dfe4cfa0-0e01-4eac-a0c8-753707905f4f/Wn5mxvk8Xd.lottie"
+          loop
+          autoplay
+          className="w-220 h-90 md:h-fit relative -left-1/2 md:-left-1/10 lg:-left-1/4 top-0 "
+        />
+      </div>
       <div className="space-y-4 lg:w-[60%]">
         {/* Heading */}
-        <div className="tracking-wide">
+        <div className=" text-center lg:text-start">
           <h2 className=" text-4xl lg:text-5xl capitalize font-semibold  leading-10 text-neutral-50 mb-2">
             Why Nexus <span className="text-accent-400">Matters</span>
           </h2>

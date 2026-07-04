@@ -15,3 +15,16 @@ export interface ContactsList  {
   title: string;
   url: string;
 };
+
+export interface Feature {
+  icon: React.ElementType;
+  title: string;
+  description: string;
+};
+
+export interface TimelineItem {
+  id: string;
+  idColor: string;
+  title: string;
+  description: string;
+};

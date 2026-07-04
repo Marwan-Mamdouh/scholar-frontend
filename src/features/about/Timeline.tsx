@@ -1,9 +1,4 @@
-type TimelineItem = {
-  id: string;
-  idColor: string;
-  title: string;
-  description: string;
-};
+import { TimelineItem } from "./about.type";
 
 const timelineData: TimelineItem[] = [
   {
