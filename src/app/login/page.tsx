@@ -37,8 +37,8 @@ export default function LoginPage() {
 
   return (
     <AuthShell>
-      <section className="w-full max-w-[28rem] animate-[fadeInUp_500ms_ease-out]">
-        <div className="rounded-[2rem] border border-primary-300/40 bg-[rgba(11,34,54,0.72)] px-6 py-8 shadow-[0_0_0_1px_rgba(90,167,214,0.18),0_0_75px_rgba(11,34,54,0.35)] backdrop-blur-2xl sm:px-8">
+      <section className="w-full max-w-md animate-[fadeInUp_500ms_ease-out]">
+        <div className="rounded-4xl border border-primary-300/40 bg-[rgba(11,34,54,0.72)] px-6 py-8 shadow-[0_0_0_1px_rgba(90,167,214,0.18),0_0_75px_rgba(11,34,54,0.35)] backdrop-blur-2xl sm:px-8">
           {!showSuccess ? (
             <>
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-accent-400/90 bg-accent-400/10 text-accent-300 shadow-[0_0_24px_rgba(55,181,170,0.22)]">
@@ -56,9 +56,9 @@ export default function LoginPage() {
 
               <div className="mt-6 space-y-3">
                 <Input
-                  label="Username"
-                  name="username"
-                  placeholder="enter your username"
+                  label="Email"
+                  name="email"
+                  placeholder="enter your email"
                   type="text"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
@@ -125,7 +125,7 @@ export default function LoginPage() {
               </p>
             </>
           ) : (
-            <div className="flex min-h-[20rem] flex-col items-center justify-center text-center">
+            <div className="flex min-h-80 flex-col items-center justify-center text-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-accent-400/80 bg-accent-400/10 text-accent-200 shadow-[0_0_24px_rgba(55,181,170,0.18)]">
                 <CircleUserRound className="h-8 w-8" />
               </div>

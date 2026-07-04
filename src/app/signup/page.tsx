@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   ArrowRight,
@@ -68,6 +67,21 @@ export default function SignupPage() {
       return;
     }
 
+    if (!email.trim()) {
+      setFormError("Your Email Is Required");
+      return;
+    }
+
+    if (!password.trim()) {
+      setFormError("Your Password Is Required");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setFormError("Passwords Do Not Match");
+      return;
+    }
+
     setFormError("");
     setCurrentStep("success");
   };
@@ -75,8 +89,8 @@ export default function SignupPage() {
   return (
     <AuthShell>
       {currentStep === "stage" && (
-        <section className="w-full max-w-[54rem] animate-[fadeInUp_500ms_ease-out]">
-          <div className="rounded-[2rem] border border-primary-300/35 bg-[rgba(11,34,54,0.68)] px-6 py-8 shadow-[0_0_0_1px_rgba(90,167,214,0.16),0_0_75px_rgba(11,34,54,0.32)] backdrop-blur-2xl sm:px-8 lg:px-12 lg:py-10">
+        <section className="w-full max-w-216 animate-[fadeInUp_500ms_ease-out]">
+          <div className="rounded-4xl border border-primary-300/35 bg-[rgba(11,34,54,0.68)] px-6 py-8 shadow-[0_0_0_1px_rgba(90,167,214,0.16),0_0_75px_rgba(11,34,54,0.32)] backdrop-blur-2xl sm:px-8 lg:px-12 lg:py-10">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-primary-300/80 bg-primary-400/10 text-primary-300 shadow-[0_0_24px_rgba(58,144,201,0.24)]">
               <UserPlus className="h-8 w-8" />
             </div>
@@ -100,7 +114,7 @@ export default function SignupPage() {
                     key={card.id}
                     type="button"
                     onClick={() => setSelectedStage(card.id)}
-                    className={`flex min-h-[8.5rem] flex-col items-center justify-center rounded-3xl border px-5 py-6 text-center transition-all duration-300 ${
+                    className={`flex min-h-34 flex-col items-center justify-center rounded-3xl border px-5 py-6 text-center transition-all duration-300 ${
                       isSelected
                         ? "border-primary-200 bg-primary-500/20 shadow-[0_0_20px_rgba(112,181,223,0.18)]"
                         : "border-transparent bg-[#1b4660]/75 hover:border-primary-300/40 hover:bg-[#214d68]/80"
@@ -110,7 +124,7 @@ export default function SignupPage() {
                     <h2 className="mt-3 text-xl font-medium text-neutral-50">
                       {card.title}
                     </h2>
-                    <p className="mt-1 max-w-[12rem] text-sm leading-5 text-neutral-200">
+                    <p className="mt-1 max-w-48 text-sm leading-5 text-neutral-200">
                       {card.description}
                     </p>
                   </button>
@@ -120,33 +134,33 @@ export default function SignupPage() {
 
             <div className="mt-8 flex items-center justify-end">
               <Button
-                className="h-11 min-w-[5.75rem] rounded-[0.7rem] bg-[#2f86c0] px-4 text-base font-semibold text-neutral-50 hover:bg-[#3b92cd]"
+                className="h-11 min-w-23 rounded-[0.7rem] bg-[#2f86c0] px-4 text-base font-semibold text-neutral-50 hover:bg-[#3b92cd]"
                 intent="primary"
                 onClick={() => setCurrentStep("profile")}
                 type="button"
                 variant="solid"
+                iconRight={<ArrowRight className="h-4 w-4" />}
               >
                 Next
-                <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
 
           <p className="mt-4 text-center text-sm text-neutral-200">
             Already Have Account?{" "}
-            <Link
+            <a
               href="/login"
               className="text-accent-200 transition-colors hover:text-accent-100"
             >
               Login Now
-            </Link>
+            </a>
           </p>
         </section>
       )}
 
       {currentStep === "profile" && (
-        <section className="w-full max-w-[28rem] animate-[fadeInUp_500ms_ease-out]">
-          <div className="rounded-[2rem] border border-primary-300/35 bg-[rgba(11,34,54,0.68)] px-6 py-8 shadow-[0_0_0_1px_rgba(90,167,214,0.16),0_0_75px_rgba(11,34,54,0.32)] backdrop-blur-2xl sm:px-8">
+        <section className="w-full max-w-md animate-[fadeInUp_500ms_ease-out]">
+          <div className="rounded-4xl border border-primary-300/35 bg-[rgba(11,34,54,0.68)] px-6 py-8 shadow-[0_0_0_1px_rgba(90,167,214,0.16),0_0_75px_rgba(11,34,54,0.32)] backdrop-blur-2xl sm:px-8">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-primary-300/80 bg-primary-400/10 text-primary-300 shadow-[0_0_24px_rgba(58,144,201,0.24)]">
               <UserPlus className="h-8 w-8" />
             </div>
@@ -199,19 +213,18 @@ export default function SignupPage() {
               />
             </div>
 
-            {formError ? (
-              <p className="mt-4 text-center text-sm text-danger-300">
-                {formError}
-              </p>
-            ) : (
-              <p className="mt-4 text-center text-sm text-transparent">
-                placeholder
-              </p>
-            )}
+            <p
+              className={`mt-4 text-center text-sm ${
+                formError ? "text-danger-300" : "text-transparent"
+              }`}
+              aria-live="polite"
+            >
+              {formError || "placeholder"}
+            </p>
 
             <div className="mt-5 flex gap-3">
               <Button
-                className="h-11 min-w-[4.75rem] rounded-[0.7rem] border border-primary-300/80 bg-transparent px-4 text-base font-medium text-primary-100 hover:bg-primary-400/10"
+                className="h-11 min-w-19 rounded-[0.7rem] border border-primary-300/80 bg-transparent px-4 text-base font-medium text-primary-100 hover:bg-primary-400/10"
                 intent="primary"
                 onClick={() => setCurrentStep("stage")}
                 type="button"
@@ -233,19 +246,19 @@ export default function SignupPage() {
 
           <p className="mt-4 text-center text-sm text-neutral-200">
             Already Have Account?{" "}
-            <Link
+            <a
               href="/login"
               className="text-accent-200 transition-colors hover:text-accent-100"
             >
               Login Now
-            </Link>
+            </a>
           </p>
         </section>
       )}
 
       {currentStep === "success" && (
-        <section className="w-full max-w-[22rem] animate-[fadeInUp_500ms_ease-out]">
-          <div className="rounded-[2rem] border border-primary-300/35 bg-[rgba(11,34,54,0.68)] px-6 py-10 text-center shadow-[0_0_0_1px_rgba(90,167,214,0.16),0_0_75px_rgba(11,34,54,0.32)] backdrop-blur-2xl sm:px-8">
+        <section className="w-full max-w-88 animate-[fadeInUp_500ms_ease-out]">
+          <div className="rounded-4xl border border-primary-300/35 bg-[rgba(11,34,54,0.68)] px-6 py-10 text-center shadow-[0_0_0_1px_rgba(90,167,214,0.16),0_0_75px_rgba(11,34,54,0.32)] backdrop-blur-2xl sm:px-8">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-accent-400/80 bg-accent-400/10 text-accent-200 shadow-[0_0_24px_rgba(55,181,170,0.18)]">
               <UserPlus className="h-8 w-8" />
             </div>
@@ -256,24 +269,16 @@ export default function SignupPage() {
             <p className="mt-2 text-subtext text-neutral-200">
               Dive In And Discover More
             </p>
-
-            <div className="mt-6 text-left text-xs text-neutral-400">
-              <p>stage: {signupPayload.stage}</p>
-              <p>name: {signupPayload.fullName}</p>
-              <p>email: {signupPayload.email}</p>
-              <p>password: {signupPayload.password}</p>
-              <p>confirmPassword: {signupPayload.confirmPassword}</p>
-            </div>
           </div>
 
           <p className="mt-4 text-center text-sm text-neutral-200">
             Already Have Account?{" "}
-            <Link
+            <a
               href="/login"
               className="text-accent-200 transition-colors hover:text-accent-100"
             >
               Login Now
-            </Link>
+            </a>
           </p>
         </section>
       )}
