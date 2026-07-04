@@ -6,7 +6,7 @@ import MeetOurTeam from "./MeetOurTeam";
 
 export default function AboutSection() {
   return (
-    <div className="w-[90%] mx-auto font-main space-y-10 lg:space-y-20">
+    <div className="w-[90%] mx-auto font-main space-y-10 lg:space-y-20 pt-26">
       <AboutTitle />
       <Pillars />
       <WhyNexus/>
