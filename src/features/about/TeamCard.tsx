@@ -1,7 +1,7 @@
 import { Member } from "./about.type";
 import LinkedinIcon from "@iconify-react/mdi/linkedin";
 
-export default function TeamCard({ id, name, role, linkedln }: Member) {
+export default function TeamCard({ id, name, role, linkedIn }: Member) {
   return (
     <div
       key={id}
@@ -25,8 +25,8 @@ export default function TeamCard({ id, name, role, linkedln }: Member) {
           </p>
         </div>
       </div>
-      {linkedln === "" || linkedln === undefined ? null : (
-        <a href={linkedln}>
+      {linkedIn === "" || linkedIn === undefined ? null : (
+        <a href={linkedIn}>
           <LinkedinIcon className="w-8 text-accent-200" />
         </a>
       )}
