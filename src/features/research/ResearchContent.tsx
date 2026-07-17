@@ -5,6 +5,7 @@ import { Input } from "@/src/components/ui/InputField/Input";
 import dynamic from "next/dynamic";
 import notFoundAnimation from "@/src/components/assets/NotFound.json";
 import ResearcherGrid from "./ResearcherGrid";
+import type { Researcher } from "./Research.type";
 
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
@@ -51,10 +52,20 @@ const ResearchContent: FC<ResearchContentProps> = ({ activeTab }) => {
   // `app/research/page.tsx` (already an async server component) and pass
   // the result down through ResearchContainer → ResearchContent → ResearcherGrid.
   // See the JSDoc in `./api.ts` for the full wiring recommendation.
-  const researchers: [] = [];
+  const researchers: Researcher[] = [];
   const totalResearchers = 0;
 
   const hasResults = researchers.length > 0;
+
+  const handleBookmarkToggle = (id: string) => {
+    // TODO: call the bookmark API once it exists
+    console.log("toggle bookmark for", id);
+  };
+
+  const handleViewProfile = (id: string) => {
+    // TODO: wire to routing once routing logic is determined
+    console.log("view profile for", id);
+  };
 
   return (
     <div className="w-full bg-transparent border-2 border-accent-200 rounded-b-2xl rounded-tr-2xl p-6 min-h-100 flex flex-col gap-8 relative -mt-px">
@@ -89,7 +100,12 @@ const ResearchContent: FC<ResearchContentProps> = ({ activeTab }) => {
 
       {/* Content area: researcher grid (returns null if empty) */}
       {activeTab === "researchers" && (
-        <ResearcherGrid researchers={researchers} total={totalResearchers} />
+        <ResearcherGrid
+          researchers={researchers}
+          total={totalResearchers}
+          onBookmarkToggle={handleBookmarkToggle}
+          onViewProfile={handleViewProfile}
+        />
       )}
 
       {/* Empty state — shared across all tabs when there are no results */}

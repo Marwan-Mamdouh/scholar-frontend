@@ -22,6 +22,7 @@ import {
 const ResearcherCard: FC<ResearcherCardProps> = ({
   researcher,
   onBookmarkToggle,
+  onViewProfile,
   className = "",
 }) => {
   const [bookmarked, setBookmarked] = useState(
@@ -40,7 +41,7 @@ const ResearcherCard: FC<ResearcherCardProps> = ({
   if (stats?.publications != null) {
     statChips.push({ label: "Pubs", value: stats.publications });
   }
-  if (stats?.citations) {
+  if (stats?.citations != null && stats.citations !== "") {
     statChips.push({ label: "Citations", value: stats.citations });
   }
   if (stats?.hIndex != null) {
@@ -139,9 +140,9 @@ const ResearcherCard: FC<ResearcherCardProps> = ({
       {/* Tag chips — only if there are tags */}
       {hasTags && (
         <div className="flex flex-wrap items-center gap-2">
-          {tags.map((tag) => (
+          {tags.map((tag, i) => (
             <Badge
-              key={tag}
+              key={`${tag}-${i}`}
               variant="outlined"
               intent="accent"
               size="sm"
@@ -159,6 +160,7 @@ const ResearcherCard: FC<ResearcherCardProps> = ({
         intent="accent"
         size="lg"
         className="w-full mt-auto"
+        onClick={() => onViewProfile?.(researcher.id)}
       >
         View Profile
       </Button>

@@ -49,7 +49,7 @@ export const getAvatarClasses = (color: AvatarColor): string => {
     "flex items-center justify-center",
     "text-sm font-bold text-neutral-50",
     "shrink-0",
-    avatarColorMap[color],
+    avatarColorMap[color] ?? "bg-neutral-500",
   ].join(" ");
 };
 

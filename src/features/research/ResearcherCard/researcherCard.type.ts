@@ -11,5 +11,7 @@ export interface ResearcherCardProps {
   researcher: Researcher;
   /** Called when the bookmark button is toggled */
   onBookmarkToggle?: (id: string) => void;
+  /** Called when the view profile button is clicked */
+  onViewProfile?: (id: string) => void;
   className?: string;
 }

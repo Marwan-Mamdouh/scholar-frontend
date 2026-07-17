@@ -11,6 +11,8 @@ export interface ResearcherGridProps {
   total?: number;
   /** Called when a card's bookmark button is toggled */
   onBookmarkToggle?: (id: string) => void;
+  /** Called when the view profile button is clicked */
+  onViewProfile?: (id: string) => void;
 }
 
 /**
@@ -22,6 +24,7 @@ export interface ResearcherGridProps {
 const ResearcherGrid: FC<ResearcherGridProps> = ({
   researchers,
   onBookmarkToggle,
+  onViewProfile,
 }) => {
   if (researchers.length === 0) {
     // When there are no results, return null — the parent component
@@ -36,6 +39,7 @@ const ResearcherGrid: FC<ResearcherGridProps> = ({
           key={researcher.id}
           researcher={researcher}
           onBookmarkToggle={onBookmarkToggle}
+          onViewProfile={onViewProfile}
         />
       ))}
     </div>
