@@ -27,9 +27,7 @@ jobs:
 
       - name: Run Job Scraper & Exporter
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_GROUP_ID: ${{ secrets.TELEGRAM_GROUP_ID }}
-          SEED_MODE: "1" # Set to 1 if we only want to dump to JSON and NOT send to Telegram, or 0 if we want both. Let's use 0 so it does both!
+          SEED_MODE: "1" # Set to 1 to ONLY dump to JSON and NEVER send to Telegram
         run: |
           cd scripts/bot
           python main.py
