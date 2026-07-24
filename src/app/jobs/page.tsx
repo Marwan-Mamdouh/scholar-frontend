@@ -4,8 +4,8 @@ import JobsClient from './JobsClient';
 export const revalidate = 0; // Disable static caching so it always fetches from Postgres
 
 export default async function JobsPage() {
-  let initialJobs = [];
-  let errorMsg = undefined;
+  let initialJobs: any[] = [];
+  let errorMsg: string | undefined = undefined;
 
   try {
     // Vercel Postgres query
