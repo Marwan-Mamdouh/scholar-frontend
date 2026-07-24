@@ -1,47 +1,91 @@
-import React from 'react';
-import fs from 'fs';
-import path from 'path';
-import { MapPin, Briefcase, Building, ExternalLink, Calendar } from 'lucide-react';
+"use client";
 
-export const metadata = {
-  title: 'Job Market | Scholar',
-  description: 'Latest programming jobs and opportunities.',
-};
+import React, { useState, useEffect, useMemo } from 'react';
+import { MapPin, Briefcase, Building, ExternalLink, Calendar, Search, AlertCircle } from 'lucide-react';
 
-async function getJobs() {
-  const filePath = path.join(process.cwd(), 'public', 'data', 'jobs.json');
-  try {
-    const fileContents = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(fileContents);
-  } catch (error) {
-    console.error("Error reading jobs.json:", error);
-    return [];
-  }
-}
+export default function JobsPage() {
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-export default async function JobsPage() {
-  const jobs = await getJobs();
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const res = await fetch('/data/jobs.json');
+        if (!res.ok) throw new Error('Failed to fetch jobs data');
+        const data = await res.json();
+        setJobs(data);
+      } catch (err: any) {
+        setError(err.message || 'An error occurred while loading jobs.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchJobs();
+  }, []);
+
+  const filteredJobs = useMemo(() => {
+    if (!searchQuery.trim()) return jobs;
+    
+    const lowerQuery = searchQuery.toLowerCase();
+    return jobs.filter((job) => {
+      const titleMatch = job.title?.toLowerCase().includes(lowerQuery);
+      const companyMatch = job.company?.toLowerCase().includes(lowerQuery);
+      const locationMatch = job.location?.toLowerCase().includes(lowerQuery);
+      const tagsMatch = job.tags?.some((tag: string) => tag.toLowerCase().includes(lowerQuery));
+      return titleMatch || companyMatch || locationMatch || tagsMatch;
+    });
+  }, [jobs, searchQuery]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12">
+        <div className="text-center mb-10">
           <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl">
             Software Engineering Jobs
           </h1>
-          <p className="mt-4 text-xl text-gray-500">
-            Automatically curated from top job boards and Telegram channels.
-          </p>
         </div>
 
-        {jobs.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">No jobs found</h3>
-            <p className="mt-1 text-gray-500">The scraper hasn't run yet or no jobs were found.</p>
+        {/* Search Bar */}
+        <div className="max-w-2xl mx-auto mb-10">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              className="block w-full pl-10 pr-3 py-4 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-lg shadow-sm transition duration-150 ease-in-out"
+              placeholder="Search by title, company, skills, or location..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* States */}
+        {loading ? (
+          <div className="text-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-500 font-medium">Loading latest jobs...</p>
+          </div>
+        ) : error ? (
+          <div className="max-w-2xl mx-auto bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-red-800">Error Loading Jobs</h3>
+            <p className="text-red-600 mt-2">{error}</p>
+          </div>
+        ) : filteredJobs.length === 0 ? (
+          <div className="max-w-2xl mx-auto bg-white border border-gray-200 rounded-xl p-10 text-center shadow-sm">
+            <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-gray-900">No jobs found</h3>
+            <p className="text-gray-500 mt-2">
+              {searchQuery ? `We couldn't find any jobs matching "${searchQuery}". Try adjusting your keywords.` : "The scraper hasn't run yet or no jobs were found."}
+            </p>
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {jobs.map((job: any) => (
+            {filteredJobs.map((job: any) => (
               <div key={job.id} className="bg-white overflow-hidden rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300 flex flex-col">
                 <div className="p-6 flex-grow">
                   <div className="flex items-center justify-between mb-4">
