@@ -1,9 +1,5 @@
 """
-SQLite persistence layer for the Telegram jobs bot.
-
-This module is intentionally isolated from the current runtime flow.
-It provides the database foundation for replacing seen_jobs.json with a
-single SQLite file that can be committed to the GitHub Actions data branch.
+PostgreSQL persistence layer for the Telegram jobs bot.
 """
 
 from __future__ import annotations
@@ -11,39 +7,30 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-import sqlite3
+import os
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from pathlib import Path
 from typing import Iterator, Optional
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
+import psycopg2
+import psycopg2.extras
+from psycopg2.extensions import connection
+
 from models import Job
 
-DB_FILE = "jobs.db"
 SCHEMA_VERSION = 1
 
-_TRACKING_QUERY_PREFIXES = (
-    "utm_",
-)
+_TRACKING_QUERY_PREFIXES = ("utm_",)
 _TRACKING_QUERY_KEYS = {
-    "fbclid",
-    "gclid",
-    "msclkid",
-    "mc_cid",
-    "mc_eid",
-    "trk",
-    "tracking_id",
-    "ref",
-    "refid",
+    "fbclid", "gclid", "msclkid", "mc_cid", "mc_eid",
+    "trk", "tracking_id", "ref", "refid",
 }
 
 
 @dataclass(frozen=True)
 class StoredJob:
-    """A persisted job row that can later be converted back to Job."""
-
     id: int
     source: str
     source_job_id: str
@@ -77,13 +64,19 @@ class StoredJob:
         )
 
 
+def get_postgres_url() -> str:
+    url = os.environ.get("POSTGRES_URL")
+    if not url:
+        raise ValueError("POSTGRES_URL environment variable is missing!")
+    return url
+
+
 @contextmanager
-def connect(db_path: str | Path = DB_FILE) -> Iterator[sqlite3.Connection]:
-    """Open a SQLite connection and ensure schema exists."""
-    conn = sqlite3.connect(str(db_path))
-    conn.row_factory = sqlite3.Row
+def connect(db_path: str = "") -> Iterator[connection]:
+    """Open a PostgreSQL connection and ensure schema exists."""
+    # db_path is ignored for postgres, kept for API compatibility with main.py
+    conn = psycopg2.connect(get_postgres_url())
     try:
-        _configure_connection(conn)
         init_db(conn)
         yield conn
         conn.commit()
@@ -94,87 +87,80 @@ def connect(db_path: str | Path = DB_FILE) -> Iterator[sqlite3.Connection]:
         conn.close()
 
 
-def _configure_connection(conn: sqlite3.Connection) -> None:
-    """Apply safe defaults for small single-file bot storage."""
-    conn.execute("PRAGMA foreign_keys = ON")
-    # Keep the database as one commit-friendly file for GitHub Actions.
-    # WAL mode creates sidecar -wal/-shm files that are easy to forget on the data branch.
-    conn.execute("PRAGMA journal_mode = DELETE")
-    conn.execute("PRAGMA busy_timeout = 5000")
+def init_db(conn: connection) -> None:
+    """Create or migrate the database schema in PostgreSQL."""
+    with conn.cursor() as cur:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS metadata (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            );
 
+            CREATE TABLE IF NOT EXISTS jobs (
+                id SERIAL PRIMARY KEY,
+                source TEXT NOT NULL,
+                source_job_id TEXT DEFAULT '',
+                title TEXT NOT NULL,
+                company TEXT DEFAULT '',
+                location TEXT DEFAULT '',
+                url TEXT NOT NULL,
+                canonical_url TEXT NOT NULL,
+                salary TEXT DEFAULT '',
+                job_type TEXT DEFAULT '',
+                tags_json TEXT DEFAULT '[]',
+                is_remote INTEGER DEFAULT 0,
+                original_source TEXT DEFAULT '',
+                content_hash TEXT NOT NULL UNIQUE,
+                send_status TEXT NOT NULL DEFAULT 'pending',
+                first_seen_at TEXT NOT NULL,
+                last_seen_at TEXT NOT NULL
+            );
 
-def init_db(conn: sqlite3.Connection) -> None:
-    """Create or migrate the database schema."""
-    conn.executescript(
-        """
-        CREATE TABLE IF NOT EXISTS metadata (
-            key TEXT PRIMARY KEY,
-            value TEXT NOT NULL
-        );
+            CREATE INDEX IF NOT EXISTS idx_jobs_send_status
+                ON jobs(send_status, last_seen_at);
 
-        CREATE TABLE IF NOT EXISTS jobs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            source TEXT NOT NULL,
-            source_job_id TEXT DEFAULT '',
-            title TEXT NOT NULL,
-            company TEXT DEFAULT '',
-            location TEXT DEFAULT '',
-            url TEXT NOT NULL,
-            canonical_url TEXT NOT NULL,
-            salary TEXT DEFAULT '',
-            job_type TEXT DEFAULT '',
-            tags_json TEXT DEFAULT '[]',
-            is_remote INTEGER DEFAULT 0,
-            original_source TEXT DEFAULT '',
-            content_hash TEXT NOT NULL UNIQUE,
-            send_status TEXT NOT NULL DEFAULT 'pending',
-            first_seen_at TEXT NOT NULL,
-            last_seen_at TEXT NOT NULL
-        );
+            CREATE INDEX IF NOT EXISTS idx_jobs_source
+                ON jobs(source, last_seen_at);
 
-        CREATE INDEX IF NOT EXISTS idx_jobs_send_status
-            ON jobs(send_status, last_seen_at);
+            CREATE TABLE IF NOT EXISTS job_sends (
+                id SERIAL PRIMARY KEY,
+                job_id INTEGER NOT NULL,
+                topic_key TEXT NOT NULL,
+                status TEXT NOT NULL,
+                sent_at TEXT,
+                error TEXT DEFAULT '',
+                updated_at TEXT NOT NULL,
+                UNIQUE(job_id, topic_key),
+                FOREIGN KEY(job_id) REFERENCES jobs(id) ON DELETE CASCADE
+            );
 
-        CREATE INDEX IF NOT EXISTS idx_jobs_source
-            ON jobs(source, last_seen_at);
+            CREATE INDEX IF NOT EXISTS idx_job_sends_status
+                ON job_sends(status, updated_at);
 
-        CREATE TABLE IF NOT EXISTS job_sends (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            job_id INTEGER NOT NULL,
-            topic_key TEXT NOT NULL,
-            status TEXT NOT NULL,
-            sent_at TEXT,
-            error TEXT DEFAULT '',
-            updated_at TEXT NOT NULL,
-            UNIQUE(job_id, topic_key),
-            FOREIGN KEY(job_id) REFERENCES jobs(id) ON DELETE CASCADE
-        );
-
-        CREATE INDEX IF NOT EXISTS idx_job_sends_status
-            ON job_sends(status, updated_at);
-
-        CREATE TABLE IF NOT EXISTS source_runs (
-            source TEXT PRIMARY KEY,
-            last_run_at TEXT,
-            status TEXT NOT NULL DEFAULT 'never',
-            error TEXT DEFAULT '',
-            updated_at TEXT NOT NULL
-        );
-        """
-    )
-    conn.execute(
-        "INSERT OR REPLACE INTO metadata(key, value) VALUES (?, ?)",
-        ("schema_version", str(SCHEMA_VERSION)),
-    )
+            CREATE TABLE IF NOT EXISTS source_runs (
+                source TEXT PRIMARY KEY,
+                last_run_at TEXT,
+                status TEXT NOT NULL DEFAULT 'never',
+                error TEXT DEFAULT '',
+                updated_at TEXT NOT NULL
+            );
+        """)
+        
+        cur.execute(
+            """
+            INSERT INTO metadata (key, value) 
+            VALUES (%s, %s)
+            ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+            """,
+            ("schema_version", str(SCHEMA_VERSION)),
+        )
 
 
 def now_utc() -> str:
-    """Return an ISO-8601 UTC timestamp without microseconds."""
     return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def normalize_text(value: object) -> str:
-    """Normalize text for stable hashing and comparisons."""
     if value is None:
         return ""
     text = str(value).strip().lower()
@@ -183,7 +169,6 @@ def normalize_text(value: object) -> str:
 
 
 def normalize_company(value: object) -> str:
-    """Normalize company names without corrupting words like 'agency'."""
     text = normalize_text(value)
     suffixes = r"\b(inc|inc\.|ltd|ltd\.|llc|corp|corporation|company|co\.|gmbh|ag|sa|pvt)\b"
     text = re.sub(suffixes, "", text)
@@ -192,15 +177,12 @@ def normalize_company(value: object) -> str:
 
 
 def canonicalize_url(url: str) -> str:
-    """Return a stable URL by removing common tracking parameters."""
     if not url:
         return ""
-
     split = urlsplit(url.strip())
     scheme = split.scheme.lower() or "https"
     netloc = split.netloc.lower()
     path = split.path.rstrip("/") or split.path
-
     kept_query_pairs: list[tuple[str, str]] = []
     for key, value in parse_qsl(split.query, keep_blank_values=True):
         key_l = key.lower()
@@ -209,34 +191,22 @@ def canonicalize_url(url: str) -> str:
         if any(key_l.startswith(prefix) for prefix in _TRACKING_QUERY_PREFIXES):
             continue
         kept_query_pairs.append((key, value))
-
     query = urlencode(kept_query_pairs, doseq=True)
     return urlunsplit((scheme, netloc, path, query, ""))
 
 
 def job_content_hash(job: Job) -> str:
-    """Create a cross-source dedup hash for the job identity."""
     canonical_url = canonicalize_url(job.url)
-    # Prefer URL when available because job boards often have stable job IDs in URLs.
-    # Include title/company/location to reduce the risk of unrelated redirect URLs merging.
-    raw = "|".join(
-        [
-            normalize_text(job.title),
-            normalize_company(job.company),
-            normalize_text(job.location),
-            canonical_url,
-        ]
-    )
+    raw = "|".join([
+        normalize_text(job.title),
+        normalize_company(job.company),
+        normalize_text(job.location),
+        canonical_url,
+    ])
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
-def upsert_job(conn: sqlite3.Connection, job: Job) -> tuple[int, bool]:
-    """
-    Insert or refresh a job.
-
-    Returns:
-        (job_id, is_new)
-    """
+def upsert_job(conn: connection, job: Job) -> tuple[int, bool]:
     if not job.title or not job.url:
         raise ValueError("Job must have a title and url before persistence.")
 
@@ -246,72 +216,48 @@ def upsert_job(conn: sqlite3.Connection, job: Job) -> tuple[int, bool]:
     source_job_id = str(getattr(job, "source_job_id", "") or "")
     tags_json = json.dumps(job.tags or [], ensure_ascii=False, sort_keys=True)
 
-    existing = conn.execute(
-        "SELECT id FROM jobs WHERE content_hash = ?",
-        (content_hash,),
-    ).fetchone()
+    with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+        cur.execute("SELECT id FROM jobs WHERE content_hash = %s", (content_hash,))
+        existing = cur.fetchone()
 
-    if existing:
-        job_id = int(existing["id"])
-        conn.execute(
+        if existing:
+            job_id = existing["id"]
+            cur.execute(
+                """
+                UPDATE jobs
+                SET source = %s, source_job_id = %s, title = %s, company = %s, location = %s,
+                    url = %s, canonical_url = %s, salary = %s, job_type = %s, tags_json = %s,
+                    is_remote = %s, original_source = %s, last_seen_at = %s
+                WHERE id = %s
+                """,
+                (
+                    job.source, source_job_id, job.title, job.company or "", job.location or "",
+                    job.url, canonical_url, job.salary or "", job.job_type or "", tags_json,
+                    1 if job.is_remote else 0, job.original_source or "", ts, job_id
+                )
+            )
+            return job_id, False
+
+        cur.execute(
             """
-            UPDATE jobs
-            SET source = ?, source_job_id = ?, title = ?, company = ?, location = ?,
-                url = ?, canonical_url = ?, salary = ?, job_type = ?, tags_json = ?,
-                is_remote = ?, original_source = ?, last_seen_at = ?
-            WHERE id = ?
+            INSERT INTO jobs (
+                source, source_job_id, title, company, location, url, canonical_url,
+                salary, job_type, tags_json, is_remote, original_source,
+                content_hash, send_status, first_seen_at, last_seen_at
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'pending', %s, %s)
+            RETURNING id
             """,
             (
-                job.source,
-                source_job_id,
-                job.title,
-                job.company or "",
-                job.location or "",
-                job.url,
-                canonical_url,
-                job.salary or "",
-                job.job_type or "",
-                tags_json,
-                1 if job.is_remote else 0,
-                job.original_source or "",
-                ts,
-                job_id,
-            ),
+                job.source, source_job_id, job.title, job.company or "", job.location or "",
+                job.url, canonical_url, job.salary or "", job.job_type or "", tags_json,
+                1 if job.is_remote else 0, job.original_source or "", content_hash, ts, ts
+            )
         )
-        return job_id, False
-
-    cur = conn.execute(
-        """
-        INSERT INTO jobs (
-            source, source_job_id, title, company, location, url, canonical_url,
-            salary, job_type, tags_json, is_remote, original_source,
-            content_hash, send_status, first_seen_at, last_seen_at
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
-        """,
-        (
-            job.source,
-            source_job_id,
-            job.title,
-            job.company or "",
-            job.location or "",
-            job.url,
-            canonical_url,
-            job.salary or "",
-            job.job_type or "",
-            tags_json,
-            1 if job.is_remote else 0,
-            job.original_source or "",
-            content_hash,
-            ts,
-            ts,
-        ),
-    )
-    return int(cur.lastrowid), True
+        return cur.fetchone()[0], True
 
 
-def upsert_jobs(conn: sqlite3.Connection, jobs: list[Job]) -> tuple[int, int]:
-    """Persist many jobs and return (inserted_count, refreshed_count)."""
+def upsert_jobs(conn: connection, jobs: list[Job]) -> tuple[int, int]:
     inserted = 0
     refreshed = 0
     for job in jobs:
@@ -323,102 +269,84 @@ def upsert_jobs(conn: sqlite3.Connection, jobs: list[Job]) -> tuple[int, int]:
     return inserted, refreshed
 
 
-def get_jobs_for_sending(conn: sqlite3.Connection, limit: int = 100) -> list[StoredJob]:
-    """Return jobs that are still pending or need retry."""
-    rows = conn.execute(
-        """
-        SELECT * FROM jobs
-        WHERE send_status IN ('pending', 'retry', 'partial')
-        ORDER BY first_seen_at ASC, id ASC
-        LIMIT ?
-        """,
-        (limit,),
-    ).fetchall()
-    return [_row_to_stored_job(row) for row in rows]
+def get_jobs_for_sending(conn: connection, limit: int = 100) -> list[StoredJob]:
+    with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+        cur.execute(
+            """
+            SELECT * FROM jobs
+            WHERE send_status IN ('pending', 'retry', 'partial')
+            ORDER BY first_seen_at ASC, id ASC
+            LIMIT %s
+            """,
+            (limit,)
+        )
+        return [_row_to_stored_job(row) for row in cur.fetchall()]
 
 
-def record_topic_send(
-    conn: sqlite3.Connection,
-    job_id: int,
-    topic_key: str,
-    success: bool,
-    error: str = "",
-) -> None:
-    """Record the Telegram send result for one job/topic pair."""
+def record_topic_send(conn: connection, job_id: int, topic_key: str, success: bool, error: str = "") -> None:
     ts = now_utc()
     status = "sent" if success else "failed"
     sent_at = ts if success else None
-    conn.execute(
-        """
-        INSERT INTO job_sends(job_id, topic_key, status, sent_at, error, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?)
-        ON CONFLICT(job_id, topic_key) DO UPDATE SET
-            status = excluded.status,
-            sent_at = excluded.sent_at,
-            error = excluded.error,
-            updated_at = excluded.updated_at
-        """,
-        (job_id, topic_key, status, sent_at, error or "", ts),
-    )
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO job_sends(job_id, topic_key, status, sent_at, error, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT(job_id, topic_key) DO UPDATE SET
+                status = EXCLUDED.status,
+                sent_at = EXCLUDED.sent_at,
+                error = EXCLUDED.error,
+                updated_at = EXCLUDED.updated_at
+            """,
+            (job_id, topic_key, status, sent_at, error or "", ts)
+        )
 
 
+def get_sent_topic_keys(conn: connection, job_id: int) -> set[str]:
+    with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+        cur.execute("SELECT topic_key FROM job_sends WHERE job_id = %s AND status = 'sent'", (job_id,))
+        return {str(row["topic_key"]) for row in cur.fetchall()}
 
 
-def get_sent_topic_keys(conn: sqlite3.Connection, job_id: int) -> set[str]:
-    """Return topic keys already sent successfully for a job."""
-    rows = conn.execute(
-        "SELECT topic_key FROM job_sends WHERE job_id = ? AND status = 'sent'",
-        (job_id,),
-    ).fetchall()
-    return {str(row["topic_key"]) for row in rows}
-
-def set_job_send_status(conn: sqlite3.Connection, job_id: int, status: str) -> None:
-    """Set the aggregate send status for a job."""
+def set_job_send_status(conn: connection, job_id: int, status: str) -> None:
     allowed = {"pending", "sent", "retry", "partial", "skipped"}
     if status not in allowed:
         raise ValueError(f"Invalid send status: {status}")
-    conn.execute("UPDATE jobs SET send_status = ? WHERE id = ?", (status, job_id))
+    with conn.cursor() as cur:
+        cur.execute("UPDATE jobs SET send_status = %s WHERE id = %s", (status, job_id))
 
 
-def update_source_run(
-    conn: sqlite3.Connection,
-    source: str,
-    status: str,
-    error: str = "",
-    last_run_at: Optional[str] = None,
-) -> None:
-    """Record source run health/timing."""
+def update_source_run(conn: connection, source: str, status: str, error: str = "", last_run_at: Optional[str] = None) -> None:
     ts = now_utc()
-    conn.execute(
-        """
-        INSERT INTO source_runs(source, last_run_at, status, error, updated_at)
-        VALUES (?, ?, ?, ?, ?)
-        ON CONFLICT(source) DO UPDATE SET
-            last_run_at = excluded.last_run_at,
-            status = excluded.status,
-            error = excluded.error,
-            updated_at = excluded.updated_at
-        """,
-        (source, last_run_at or ts, status, error or "", ts),
-    )
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO source_runs(source, last_run_at, status, error, updated_at)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT(source) DO UPDATE SET
+                last_run_at = EXCLUDED.last_run_at,
+                status = EXCLUDED.status,
+                error = EXCLUDED.error,
+                updated_at = EXCLUDED.updated_at
+            """,
+            (source, last_run_at or ts, status, error or "", ts)
+        )
 
 
-def get_source_last_run(conn: sqlite3.Connection, source: str) -> Optional[str]:
-    """Return the last run timestamp for a source, if available."""
-    row = conn.execute(
-        "SELECT last_run_at FROM source_runs WHERE source = ?",
-        (source,),
-    ).fetchone()
-    return str(row["last_run_at"]) if row and row["last_run_at"] else None
+def get_source_last_run(conn: connection, source: str) -> Optional[str]:
+    with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+        cur.execute("SELECT last_run_at FROM source_runs WHERE source = %s", (source,))
+        row = cur.fetchone()
+        return str(row["last_run_at"]) if row and row["last_run_at"] else None
 
 
-def count_jobs(conn: sqlite3.Connection) -> int:
-    """Return total persisted jobs."""
-    row = conn.execute("SELECT COUNT(*) AS c FROM jobs").fetchone()
-    return int(row["c"])
+def count_jobs(conn: connection) -> int:
+    with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+        cur.execute("SELECT COUNT(*) AS c FROM jobs")
+        return int(cur.fetchone()["c"])
 
 
-def _row_to_stored_job(row: sqlite3.Row) -> StoredJob:
+def _row_to_stored_job(row: dict) -> StoredJob:
     tags = []
     try:
         loaded = json.loads(row["tags_json"] or "[]")

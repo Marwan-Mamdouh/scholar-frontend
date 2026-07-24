@@ -274,44 +274,8 @@ def run_bot(
     return summary
 
 
-def export_jobs_to_json(db_path: str = DB_FILE, out_path: str = "../../public/data/jobs.json") -> None:
-    """Export all stored jobs to a JSON file for the Next.js frontend."""
-    import json
-    import os
-    
-    os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    
-    with connect(db_path) as conn:
-        rows = conn.execute("SELECT * FROM jobs ORDER BY first_seen_at DESC").fetchall()
-        jobs_list = []
-        for row in rows:
-            try:
-                tags = json.loads(row["tags_json"] or "[]")
-            except:
-                tags = []
-                
-            jobs_list.append({
-                "id": row["id"],
-                "source": row["source"],
-                "title": row["title"],
-                "company": row["company"],
-                "location": row["location"],
-                "url": row["url"],
-                "salary": row["salary"],
-                "job_type": row["job_type"],
-                "tags": tags,
-                "is_remote": bool(row["is_remote"]),
-                "first_seen_at": row["first_seen_at"],
-                "send_status": row["send_status"]
-            })
-            
-    with open(out_path, "w", encoding="utf-8") as f:
-        json.dump(jobs_list, f, ensure_ascii=False, indent=2)
-    log.info(f"Exported {len(jobs_list)} jobs to {out_path}")
-
 def main() -> None:
     run_bot()
-    export_jobs_to_json()
 
 
 if __name__ == "__main__":

@@ -25,15 +25,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r scripts/bot/requirements.txt
 
-      - name: Run Job Scraper & Exporter
+      - name: Run Job Scraper
         env:
-          SEED_MODE: "1" # Set to 1 to ONLY dump to JSON and NEVER send to Telegram
+          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+          SEED_MODE: "1" # Ensures Telegram sending logic is skipped
         run: |
           cd scripts/bot
           python main.py
-
-      - name: Commit updated jobs.json
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Automated jobs update [skip ci]"
-          file_pattern: 'public/data/jobs.json scripts/bot/jobs.db'
