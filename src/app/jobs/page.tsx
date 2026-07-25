@@ -12,7 +12,10 @@ export default async function JobsPage() {
     initialJobs = rows;
   } catch (error: any) {
     console.error("Vercel Postgres Error:", error);
-    errorMsg = error.message || "Failed to connect to database";
+    
+    // DEBUG: check if POSTGRES_URL is actually in process.env
+    const envKeys = Object.keys(process.env).filter(k => k.includes('POSTGRES') || k.includes('DATABASE')).join(', ');
+    errorMsg = `Error: ${error.message}. Debug Env Keys: [${envKeys}]`;
   }
 
   return <JobsClient initialJobs={initialJobs} serverError={errorMsg} />;
