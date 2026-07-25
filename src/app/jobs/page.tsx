@@ -8,7 +8,7 @@ export default async function JobsPage() {
   let errorMsg: string | undefined = undefined;
 
   try {
-    const client = createClient();
+    const client = createClient({ connectionString: process.env.POSTGRES_URL });
     await client.connect();
     
     try {
