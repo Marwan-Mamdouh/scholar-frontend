@@ -27,7 +27,6 @@ from models import Job, is_programming_job, passes_geo_filter
 from telegram_sender import send_job, route_job
 from cleanup import cleanup_join_messages
 from db import (
-    DB_FILE,
     connect,
     count_jobs,
     get_jobs_for_sending,
@@ -211,7 +210,7 @@ def mark_pending_as_skipped(conn, limit: int = MAX_JOBS_PER_RUN) -> int:
 
 
 def run_bot(
-    db_path: str = DB_FILE,
+    db_path: str = "",
     fetchers: Iterable[Fetcher] = ALL_FETCHERS,
     sender: Sender = send_job,
     router: Router = route_job,
