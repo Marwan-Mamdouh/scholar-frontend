@@ -32,7 +32,7 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
           "full stack", "front end", "back end", "mobile", 
           "data science", "machine learning", "devops", "design",
           "digital design", "digital verification", "hardware",
-          "data engineer", "embedded", "qa", "testing", "game dev", 
+          "data engineer", "data analyst", "data analytics", "embedded", "qa", "testing", "game dev", 
           "network", "cloud", "infrastructure", "platform", "security", "ai"
         ];
         
@@ -127,6 +127,7 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                   { label: "Back-End", value: "back end" },
                   { label: "Mobile Development", value: "mobile" },
                   { label: "Data Science", value: "data science" },
+                  { label: "Data Analytics", value: "data analyt" },
                   { label: "Machine Learning", value: "machine learning" },
                   { label: "Data Engineering", value: "data engineer" },
                   { label: "AI Engineering", value: "ai" },
