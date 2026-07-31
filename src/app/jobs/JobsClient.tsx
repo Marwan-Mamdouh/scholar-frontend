@@ -28,7 +28,7 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
       result = result.filter(job => {
         const searchString = `${job.title} ${job.tags_json}`.toLowerCase();
         const knownCategories = [
-          "web development", "full stack", "front end", "back end", "mobile", 
+          "full stack", "front end", "back end", "mobile", 
           "data science", "machine learning", "devops", "design",
           "digital design", "digital verification", "hardware"
         ];
@@ -108,7 +108,6 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                 state={categories} 
                 setState={setCategories}
                 options={[
-                  { label: "Web Development", value: "web development" },
                   { label: "Full Stack", value: "full stack" },
                   { label: "Front-End", value: "front end" },
                   { label: "Back-End", value: "back end" },
