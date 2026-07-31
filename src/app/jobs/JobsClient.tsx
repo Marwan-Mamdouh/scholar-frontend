@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { MapPin, Briefcase, Building, ExternalLink, Calendar, Search, AlertCircle, Filter } from 'lucide-react';
 import Button from "@/src/components/ui/Button/Button";
+import LightingGlow from "@/src/components/ui/LightingGlow/LightingGlow";
 
 export default function JobsClient({ initialJobs, serverError }: { initialJobs: any[], serverError?: string }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -92,8 +93,19 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
   );
 
   return (
-    <div className="min-h-screen bg-transparent font-main tracking-eyebrow pt-28 pb-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-[1600px] mx-auto">
+    <div className="min-h-screen bg-transparent font-main tracking-eyebrow pt-28 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      
+      {/* Background Glows to match Home page */}
+      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+        <div className="absolute top-[10%] right-[15%] w-71.5 h-50 opacity-60">
+          <LightingGlow variant="primary" className="blur-[150px]" />
+        </div>
+        <div className="absolute bottom-[20%] left-[5%] w-73.5 h-54 opacity-60">
+          <LightingGlow variant="accent" className="blur-[150px]" />
+        </div>
+      </div>
+
+      <div className="max-w-[1600px] mx-auto relative z-10">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar */}
           <aside className="w-full lg:w-1/4 flex-shrink-0">
@@ -277,10 +289,10 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                     <div className="px-6 py-4 bg-black/20 border-t border-white/5 mt-auto">
                       <Button
                         onClick={() => window.open(job.url, '_blank')}
-                        intent="primary"
-                        variant="solid"
+                        intent="accent"
+                        variant="outlined"
                         size="md"
-                        className="w-full"
+                        className="w-full border-white/20 text-white hover:text-accent-200"
                         iconRight={<ExternalLink className="w-4 h-4" />}
                       >
                         Apply Now
