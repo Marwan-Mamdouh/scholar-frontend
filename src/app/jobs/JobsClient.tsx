@@ -1,23 +1,80 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { MapPin, Briefcase, Building, ExternalLink, Calendar, Search, AlertCircle } from 'lucide-react';
+import { MapPin, Briefcase, Building, ExternalLink, Calendar, Search, AlertCircle, Filter } from 'lucide-react';
 
 export default function JobsClient({ initialJobs, serverError }: { initialJobs: any[], serverError?: string }) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [categories, setCategories] = useState<string[]>([]);
+  const [seniorities, setSeniorities] = useState<string[]>([]);
+  const [locations, setLocations] = useState<string[]>([]);
+  const [providers, setProviders] = useState<string[]>([]);
 
   const filteredJobs = useMemo(() => {
-    if (!searchQuery.trim()) return initialJobs;
-    
-    const lowerQuery = searchQuery.toLowerCase();
-    return initialJobs.filter((job) => {
-      const titleMatch = job.title?.toLowerCase().includes(lowerQuery);
-      const companyMatch = job.company?.toLowerCase().includes(lowerQuery);
-      const locationMatch = job.location?.toLowerCase().includes(lowerQuery);
-      const tagsMatch = false; // We can parse tags_json if needed, but for simplicity let's stick to title/company/location
-      return titleMatch || companyMatch || locationMatch || tagsMatch;
-    });
-  }, [initialJobs, searchQuery]);
+    let result = initialJobs || [];
+
+    if (searchQuery.trim()) {
+      const lowerQuery = searchQuery.toLowerCase();
+      result = result.filter((job) => {
+        const titleMatch = job.title?.toLowerCase().includes(lowerQuery);
+        const companyMatch = job.company?.toLowerCase().includes(lowerQuery);
+        const locationMatch = job.location?.toLowerCase().includes(lowerQuery);
+        return titleMatch || companyMatch || locationMatch;
+      });
+    }
+
+    if (categories.length > 0) {
+      result = result.filter(job => {
+        const searchString = `${job.title} ${job.tags_json}`.toLowerCase();
+        return categories.some(cat => searchString.includes(cat.toLowerCase()));
+      });
+    }
+
+    if (seniorities.length > 0) {
+      result = result.filter(job => {
+        const searchString = `${job.title} ${job.tags_json}`.toLowerCase();
+        return seniorities.some(sen => searchString.includes(sen.toLowerCase()));
+      });
+    }
+
+    if (locations.length > 0) {
+      result = result.filter(job => {
+        const isRemote = job.is_remote === 1 || job.location?.toLowerCase().includes('remote');
+        const matchesRemote = locations.includes('remote') && isRemote;
+        const matchesOnsite = locations.includes('onsite') && !isRemote;
+        return matchesRemote || matchesOnsite;
+      });
+    }
+
+    if (providers.length > 0) {
+      result = result.filter(job => providers.includes(job.source?.toLowerCase()));
+    }
+
+    return result;
+  }, [initialJobs, searchQuery, categories, seniorities, locations, providers]);
+
+  const toggleFilter = (setFilter: React.Dispatch<React.SetStateAction<string[]>>, value: string) => {
+    setFilter(prev => prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]);
+  };
+
+  const FilterSection = ({ title, options, state, setState }: { title: string, options: { label: string, value: string }[], state: string[], setState: React.Dispatch<React.SetStateAction<string[]>> }) => (
+    <div className="mb-6">
+      <h3 className="font-bold text-gray-900 mb-3">{title}</h3>
+      <div className="space-y-2">
+        {options.map(option => (
+          <label key={option.value} className="flex items-center space-x-3 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={state.includes(option.value)}
+              onChange={() => toggleFilter(setState, option.value)}
+              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+            />
+            <span className="text-gray-700 group-hover:text-blue-600 transition-colors text-sm font-medium">{option.label}</span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -44,107 +101,167 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
           </div>
         </div>
 
-        {/* States */}
-        {serverError ? (
-          <div className="max-w-2xl mx-auto bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-red-800">Database Connection Error</h3>
-            <p className="text-red-600 mt-2">{serverError}</p>
-            <p className="text-red-500 text-sm mt-2">Have you configured POSTGRES_URL in Vercel?</p>
-          </div>
-        ) : filteredJobs.length === 0 ? (
-          <div className="max-w-2xl mx-auto bg-white border border-gray-200 rounded-xl p-10 text-center shadow-sm">
-            <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-gray-900">No jobs found</h3>
-            <p className="text-gray-500 mt-2">
-              {searchQuery ? `We couldn't find any jobs matching "${searchQuery}". Try adjusting your keywords.` : "The database is empty or hasn't synced yet."}
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredJobs.map((job: any) => {
-              // Parse tags if they come back as a JSON string from Postgres
-              let parsedTags = [];
-              try {
-                  parsedTags = typeof job.tags_json === 'string' ? JSON.parse(job.tags_json) : (job.tags_json || []);
-              } catch (e) {}
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Sidebar */}
+          <aside className="w-full lg:w-1/4 flex-shrink-0">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 sticky top-4">
+              <div className="flex items-center gap-2 mb-6 pb-4 border-b border-gray-100">
+                <Filter className="w-5 h-5 text-gray-500" />
+                <h2 className="text-lg font-bold text-gray-900">Filters</h2>
+              </div>
+              
+              <FilterSection 
+                title="Category" 
+                state={categories} 
+                setState={setCategories}
+                options={[
+                  { label: "Web Development", value: "web development" },
+                  { label: "Full Stack", value: "full stack" }
+                ]} 
+              />
+              
+              <FilterSection 
+                title="Seniority Level" 
+                state={seniorities} 
+                setState={setSeniorities}
+                options={[
+                  { label: "Junior", value: "junior" },
+                  { label: "Mid-Level", value: "mid" },
+                  { label: "Senior", value: "senior" }
+                ]} 
+              />
+              
+              <FilterSection 
+                title="Work Location" 
+                state={locations} 
+                setState={setLocations}
+                options={[
+                  { label: "Remote", value: "remote" },
+                  { label: "Onsite", value: "onsite" }
+                ]} 
+              />
+              
+              <FilterSection 
+                title="Website Provider" 
+                state={providers} 
+                setState={setProviders}
+                options={[
+                  { label: "LinkedIn", value: "linkedin" },
+                  { label: "Wuzzuf", value: "wuzzuf" }
+                ]} 
+              />
+            </div>
+          </aside>
 
-              return (
-              <div key={job.id} className="bg-white overflow-hidden rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300 flex flex-col">
-                <div className="p-6 flex-grow">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {job.source}
-                    </span>
-                    <span className="text-xs text-gray-500 flex items-center">
-                      <Calendar className="w-3 h-3 mr-1" />
-                      {new Date(job.first_seen_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
-                    {job.title}
-                  </h3>
-                  
-                  <div className="space-y-2 mb-4">
-                    {job.company && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Building className="w-4 h-4 mr-2 text-gray-400" />
-                        <span className="font-medium text-gray-900">{job.company}</span>
+          {/* Main Grid */}
+          <main className="w-full lg:w-3/4">
+            {/* States */}
+            {serverError ? (
+              <div className="max-w-2xl mx-auto bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+                <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                <h3 className="text-lg font-bold text-red-800">Database Connection Error</h3>
+                <p className="text-red-600 mt-2">{serverError}</p>
+                <p className="text-red-500 text-sm mt-2">Have you configured POSTGRES_URL in Vercel?</p>
+              </div>
+            ) : filteredJobs.length === 0 ? (
+              <div className="max-w-2xl mx-auto bg-white border border-gray-200 rounded-xl p-10 text-center shadow-sm">
+                <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-gray-900">No jobs found</h3>
+                <p className="text-gray-500 mt-2">
+                  {searchQuery || categories.length || seniorities.length || locations.length || providers.length 
+                    ? "We couldn't find any jobs matching your criteria. Try adjusting your filters." 
+                    : "The database is empty or hasn't synced yet."}
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                {filteredJobs.map((job: any) => {
+                  let parsedTags = [];
+                  try {
+                      parsedTags = typeof job.tags_json === 'string' ? JSON.parse(job.tags_json) : (job.tags_json || []);
+                  } catch (e) {}
+
+                  // Deduplicate remote tag
+                  parsedTags = parsedTags.filter((tag: string) => tag.toLowerCase() !== 'remote');
+
+                  return (
+                  <div key={job.id} className="bg-white overflow-hidden rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300 flex flex-col">
+                    <div className="p-6 flex-grow">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
+                          {job.source}
+                        </span>
+                        <span className="text-xs text-gray-500 flex items-center">
+                          <Calendar className="w-3 h-3 mr-1" />
+                          {new Date(job.first_seen_at).toLocaleDateString()}
+                        </span>
                       </div>
-                    )}
-                    
-                    {job.location && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <MapPin className="w-4 h-4 mr-2 text-gray-400" />
-                        <span>{job.location}</span>
-                        {job.is_remote === 1 && (
-                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                            Remote
-                          </span>
+                      
+                      <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
+                        {job.title}
+                      </h3>
+                      
+                      <div className="space-y-2 mb-4">
+                        {job.company && (
+                          <div className="flex items-center text-sm text-gray-600">
+                            <Building className="w-4 h-4 mr-2 text-gray-400" />
+                            <span className="font-medium text-gray-900 line-clamp-1">{job.company}</span>
+                          </div>
+                        )}
+                        
+                        {job.location && (
+                          <div className="flex items-center text-sm text-gray-600">
+                            <MapPin className="w-4 h-4 mr-2 text-gray-400" />
+                            <span className="line-clamp-1">{job.location}</span>
+                            {job.is_remote === 1 && (
+                              <span className="ml-2 inline-flex flex-shrink-0 items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                Remote
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        
+                        {job.job_type && (
+                          <div className="flex items-center text-sm text-gray-600">
+                            <Briefcase className="w-4 h-4 mr-2 text-gray-400" />
+                            <span className="line-clamp-1">{job.job_type}</span>
+                          </div>
                         )}
                       </div>
-                    )}
-                    
-                    {job.job_type && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Briefcase className="w-4 h-4 mr-2 text-gray-400" />
-                        <span>{job.job_type}</span>
-                      </div>
-                    )}
-                  </div>
 
-                  {parsedTags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-4">
-                      {parsedTags.slice(0, 4).map((tag: string, i: number) => (
-                        <span key={i} className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600">
-                          {tag}
-                        </span>
-                      ))}
-                      {parsedTags.length > 4 && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-50 text-gray-500">
-                          +{parsedTags.length - 4} more
-                        </span>
+                      {parsedTags.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-4">
+                          {parsedTags.slice(0, 3).map((tag: string, i: number) => (
+                            <span key={i} className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 line-clamp-1">
+                              {tag}
+                            </span>
+                          ))}
+                          {parsedTags.length > 3 && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-50 text-gray-500">
+                              +{parsedTags.length - 3} more
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
-                  )}
-                </div>
-                
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 mt-auto">
-                  <a
-                    href={job.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Apply Now
-                    <ExternalLink className="w-4 h-4 ml-2" />
-                  </a>
-                </div>
+                    
+                    <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 mt-auto">
+                      <a
+                        href={job.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Apply Now
+                        <ExternalLink className="w-4 h-4 ml-2" />
+                      </a>
+                    </div>
+                  </div>
+                )})}
               </div>
-            )})}
-          </div>
-        )}
+            )}
+          </main>
+        </div>
       </div>
     </div>
   );
