@@ -112,7 +112,7 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
             <div className="bg-white/5 p-6 rounded-xl shadow-sm border border-accent-200/50 sticky top-4">
               <div className="flex items-center gap-2 mb-6 pb-4 border-b border-white/10">
                 <Filter className="w-5 h-5 text-neutral-300" />
-                <h2 className="text-lg font-bold text-primary-200">Filters</h2>
+                <h2 className="text-lg font-bold text-neutral-50 tracking-display">Filters</h2>
               </div>
               
               <FilterSection 
@@ -172,7 +172,7 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
           <main className="w-full lg:w-3/4">
             
             <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <h1 className="text-3xl font-extrabold text-primary-200 sm:text-4xl">
+              <h1 className="font-main font-bold capitalize text-neutral-50 text-3xl sm:text-4xl tracking-display">
                 Software Engineering Jobs
               </h1>
               <p className="text-neutral-300 text-sm font-medium">
