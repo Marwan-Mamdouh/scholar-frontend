@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { MapPin, Briefcase, Building, ExternalLink, Calendar, Search, AlertCircle, Filter } from 'lucide-react';
+import Button from "@/src/components/ui/Button/Button";
 
 export default function JobsClient({ initialJobs, serverError }: { initialJobs: any[], serverError?: string }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -268,15 +269,16 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                     </div>
                     
                     <div className="px-6 py-4 bg-black/20 border-t border-white/5 mt-auto">
-                      <a
-                        href={job.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-white bg-accent-600 rounded-lg hover:bg-accent-500 transition-colors"
+                      <Button
+                        onClick={() => window.open(job.url, '_blank')}
+                        intent="primary"
+                        variant="solid"
+                        size="md"
+                        className="w-full"
+                        iconRight={<ExternalLink className="w-4 h-4" />}
                       >
                         Apply Now
-                        <ExternalLink className="w-4 h-4 ml-2" />
-                      </a>
+                      </Button>
                     </div>
                   </div>
                 )})}
