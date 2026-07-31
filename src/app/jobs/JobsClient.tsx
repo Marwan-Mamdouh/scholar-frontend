@@ -127,7 +127,7 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                   { label: "Back-End", value: "back end" },
                   { label: "Mobile Development", value: "mobile" },
                   { label: "Data Science", value: "data science" },
-                  { label: "Data Analytics", value: "data analyt" },
+                  { label: "Data Analyst", value: "data analyt" },
                   { label: "Machine Learning", value: "machine learning" },
                   { label: "Data Engineering", value: "data engineer" },
                   { label: "AI Engineering", value: "ai" },
