@@ -59,7 +59,7 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
 
   const FilterSection = ({ title, options, state, setState }: { title: string, options: { label: string, value: string }[], state: string[], setState: React.Dispatch<React.SetStateAction<string[]>> }) => (
     <div className="mb-6">
-      <h3 className="font-bold text-gray-900 mb-3">{title}</h3>
+      <h3 className="font-bold text-primary-300 mb-3">{title}</h3>
       <div className="space-y-2">
         {options.map(option => (
           <label key={option.value} className="flex items-center space-x-3 cursor-pointer group">
@@ -67,9 +67,9 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
               type="checkbox"
               checked={state.includes(option.value)}
               onChange={() => toggleFilter(setState, option.value)}
-              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+              className="h-4 w-4 text-accent-400 border-neutral-600 rounded focus:ring-accent-400 cursor-pointer bg-white/10"
             />
-            <span className="text-gray-700 group-hover:text-blue-600 transition-colors text-sm font-medium">{option.label}</span>
+            <span className="text-neutral-100 group-hover:text-accent-300 transition-colors text-sm font-medium">{option.label}</span>
           </label>
         ))}
       </div>
@@ -77,10 +77,10 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-transparent font-main tracking-eyebrow py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-10">
-          <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl">
+          <h1 className="text-4xl font-extrabold text-primary-200 sm:text-5xl">
             Software Engineering Jobs
           </h1>
         </div>
@@ -93,7 +93,7 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
             </div>
             <input
               type="text"
-              className="block w-full pl-10 pr-3 py-4 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-lg shadow-sm transition duration-150 ease-in-out"
+              className="block w-full pl-10 pr-3 py-4 border border-accent-200/50 rounded-xl leading-5 bg-white/5 text-neutral-50 placeholder-neutral-300 focus:outline-none focus:ring-1 focus:ring-primary-300 focus:border-primary-300 sm:text-lg shadow-sm transition duration-150 ease-in-out"
               placeholder="Search by title, company, skills, or location..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -104,10 +104,10 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar */}
           <aside className="w-full lg:w-1/4 flex-shrink-0">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 sticky top-4">
-              <div className="flex items-center gap-2 mb-6 pb-4 border-b border-gray-100">
-                <Filter className="w-5 h-5 text-gray-500" />
-                <h2 className="text-lg font-bold text-gray-900">Filters</h2>
+            <div className="bg-white/5 p-6 rounded-xl shadow-sm border border-accent-200/50 sticky top-4">
+              <div className="flex items-center gap-2 mb-6 pb-4 border-b border-white/10">
+                <Filter className="w-5 h-5 text-neutral-300" />
+                <h2 className="text-lg font-bold text-primary-200">Filters</h2>
               </div>
               
               <FilterSection 
@@ -157,17 +157,17 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
           <main className="w-full lg:w-3/4">
             {/* States */}
             {serverError ? (
-              <div className="max-w-2xl mx-auto bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+              <div className="max-w-2xl mx-auto bg-red-500/10 border border-red-500/30 rounded-xl p-6 text-center">
                 <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                <h3 className="text-lg font-bold text-red-800">Database Connection Error</h3>
-                <p className="text-red-600 mt-2">{serverError}</p>
-                <p className="text-red-500 text-sm mt-2">Have you configured POSTGRES_URL in Vercel?</p>
+                <h3 className="text-lg font-bold text-red-400">Database Connection Error</h3>
+                <p className="text-red-300 mt-2">{serverError}</p>
+                <p className="text-red-400/80 text-sm mt-2">Have you configured POSTGRES_URL in Vercel?</p>
               </div>
             ) : filteredJobs.length === 0 ? (
-              <div className="max-w-2xl mx-auto bg-white border border-gray-200 rounded-xl p-10 text-center shadow-sm">
-                <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-gray-900">No jobs found</h3>
-                <p className="text-gray-500 mt-2">
+              <div className="max-w-2xl mx-auto bg-white/5 border border-accent-200/50 rounded-xl p-10 text-center shadow-sm">
+                <Search className="w-16 h-16 text-neutral-400 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-accent-300">No jobs found</h3>
+                <p className="text-neutral-100 mt-2">
                   {searchQuery || categories.length || seniorities.length || locations.length || providers.length 
                     ? "We couldn't find any jobs matching your criteria. Try adjusting your filters." 
                     : "The database is empty or hasn't synced yet."}
@@ -185,36 +185,36 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                   parsedTags = parsedTags.filter((tag: string) => tag.toLowerCase() !== 'remote');
 
                   return (
-                  <div key={job.id} className="bg-white overflow-hidden rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300 flex flex-col">
+                  <div key={job.id} className="bg-white/10 overflow-hidden rounded-xl shadow-sm border border-accent-200/50 hover:shadow-md transition-shadow duration-300 flex flex-col">
                     <div className="p-6 flex-grow">
                       <div className="flex items-center justify-between mb-4">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary-500/20 text-primary-200 capitalize border border-primary-500/30">
                           {job.source}
                         </span>
-                        <span className="text-xs text-gray-500 flex items-center">
+                        <span className="text-xs text-neutral-300 flex items-center">
                           <Calendar className="w-3 h-3 mr-1" />
                           {new Date(job.first_seen_at).toLocaleDateString()}
                         </span>
                       </div>
                       
-                      <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
+                      <h3 className="text-xl font-bold text-primary-200 mb-2 line-clamp-2">
                         {job.title}
                       </h3>
                       
                       <div className="space-y-2 mb-4">
                         {job.company && (
-                          <div className="flex items-center text-sm text-gray-600">
-                            <Building className="w-4 h-4 mr-2 text-gray-400" />
-                            <span className="font-medium text-gray-900 line-clamp-1">{job.company}</span>
+                          <div className="flex items-center text-sm text-neutral-100">
+                            <Building className="w-4 h-4 mr-2 text-neutral-400" />
+                            <span className="font-medium text-neutral-50 line-clamp-1">{job.company}</span>
                           </div>
                         )}
                         
                         {job.location && (
-                          <div className="flex items-center text-sm text-gray-600">
-                            <MapPin className="w-4 h-4 mr-2 text-gray-400" />
+                          <div className="flex items-center text-sm text-neutral-100">
+                            <MapPin className="w-4 h-4 mr-2 text-neutral-400" />
                             <span className="line-clamp-1">{job.location}</span>
                             {job.is_remote === 1 && (
-                              <span className="ml-2 inline-flex flex-shrink-0 items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                              <span className="ml-2 inline-flex flex-shrink-0 items-center px-2 py-0.5 rounded text-xs font-medium bg-accent-600/20 text-accent-300 border border-accent-600/30">
                                 Remote
                               </span>
                             )}
@@ -222,8 +222,8 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                         )}
                         
                         {job.job_type && (
-                          <div className="flex items-center text-sm text-gray-600">
-                            <Briefcase className="w-4 h-4 mr-2 text-gray-400" />
+                          <div className="flex items-center text-sm text-neutral-100">
+                            <Briefcase className="w-4 h-4 mr-2 text-neutral-400" />
                             <span className="line-clamp-1">{job.job_type}</span>
                           </div>
                         )}
@@ -232,12 +232,12 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                       {parsedTags.length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-4">
                           {parsedTags.slice(0, 3).map((tag: string, i: number) => (
-                            <span key={i} className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 line-clamp-1">
+                            <span key={i} className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-white/5 text-neutral-300 border border-white/10 line-clamp-1">
                               {tag}
                             </span>
                           ))}
                           {parsedTags.length > 3 && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-50 text-gray-500">
+                            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-white/5 text-neutral-400 border border-white/10">
                               +{parsedTags.length - 3} more
                             </span>
                           )}
@@ -245,12 +245,12 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                       )}
                     </div>
                     
-                    <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 mt-auto">
+                    <div className="px-6 py-4 bg-black/20 border-t border-white/5 mt-auto">
                       <a
                         href={job.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                        className="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-white bg-accent-600 rounded-lg hover:bg-accent-500 transition-colors"
                       >
                         Apply Now
                         <ExternalLink className="w-4 h-4 ml-2" />
