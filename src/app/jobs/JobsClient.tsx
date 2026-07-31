@@ -32,7 +32,7 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
           "full stack", "front end", "back end", "mobile", 
           "data science", "machine learning", "devops", "design",
           "digital design", "digital verification", "hardware",
-          "data engineer", "data analyst", "data analytics", "embedded", "qa", "testing", "game dev", 
+          "data engineer", "data analyst", "data analytics", "software engineer", "embedded", "qa", "testing", "game dev", 
           "network", "cloud", "infrastructure", "platform", "security", "ai"
         ];
         
@@ -123,6 +123,7 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                 setState={setCategories}
                 options={[
                   { label: "Full Stack", value: "full stack" },
+                  { label: "Software Engineer", value: "software engineer" },
                   { label: "Front-End", value: "front end" },
                   { label: "Back-End", value: "back end" },
                   { label: "Mobile Development", value: "mobile" },
