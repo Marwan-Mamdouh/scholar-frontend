@@ -94,7 +94,14 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                 setState={setCategories}
                 options={[
                   { label: "Web Development", value: "web development" },
-                  { label: "Full Stack", value: "full stack" }
+                  { label: "Full Stack", value: "full stack" },
+                  { label: "Front-End", value: "front end" },
+                  { label: "Back-End", value: "back end" },
+                  { label: "Mobile Development", value: "mobile" },
+                  { label: "Data Science", value: "data science" },
+                  { label: "Machine Learning", value: "machine learning" },
+                  { label: "DevOps", value: "devops" },
+                  { label: "UI/UX Design", value: "design" }
                 ]} 
               />
               
