@@ -87,7 +87,7 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
   );
 
   return (
-    <div className="min-h-screen bg-transparent font-main tracking-eyebrow py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-transparent font-main tracking-eyebrow pt-28 pb-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-[1600px] mx-auto">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar */}
