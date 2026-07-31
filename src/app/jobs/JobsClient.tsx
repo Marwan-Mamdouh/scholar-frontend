@@ -78,29 +78,7 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
 
   return (
     <div className="min-h-screen bg-transparent font-main tracking-eyebrow py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-extrabold text-primary-200 sm:text-5xl">
-            Software Engineering Jobs
-          </h1>
-        </div>
-
-        {/* Search Bar */}
-        <div className="max-w-2xl mx-auto mb-10">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              className="block w-full pl-10 pr-3 py-4 border border-accent-200/50 rounded-xl leading-5 bg-white/5 text-neutral-50 placeholder-neutral-300 focus:outline-none focus:ring-1 focus:ring-primary-300 focus:border-primary-300 sm:text-lg shadow-sm transition duration-150 ease-in-out"
-              placeholder="Search by title, company, skills, or location..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-
+      <div className="max-w-[1600px] mx-auto">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar */}
           <aside className="w-full lg:w-1/4 flex-shrink-0">
@@ -155,6 +133,32 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
 
           {/* Main Grid */}
           <main className="w-full lg:w-3/4">
+            
+            <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <h1 className="text-3xl font-extrabold text-primary-200 sm:text-4xl">
+                Software Engineering Jobs
+              </h1>
+              <p className="text-neutral-300 text-sm font-medium">
+                Showing {filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'}
+              </p>
+            </div>
+
+            {/* Search Bar */}
+            <div className="w-full mb-8">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-neutral-400" />
+                </div>
+                <input
+                  type="text"
+                  className="block w-full pl-12 pr-4 py-4 border border-accent-200/50 rounded-xl leading-5 bg-white/5 text-neutral-50 placeholder-neutral-300 focus:outline-none focus:ring-1 focus:ring-primary-300 focus:border-primary-300 sm:text-lg shadow-sm transition duration-150 ease-in-out"
+                  placeholder="Search by title, company, skills, or location..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+
             {/* States */}
             {serverError ? (
               <div className="max-w-2xl mx-auto bg-red-500/10 border border-red-500/30 rounded-xl p-6 text-center">
