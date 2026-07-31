@@ -26,7 +26,17 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
     if (categories.length > 0) {
       result = result.filter(job => {
         const searchString = `${job.title} ${job.tags_json}`.toLowerCase();
-        return categories.some(cat => searchString.includes(cat.toLowerCase()));
+        const knownCategories = ["web development", "full stack", "front end", "back end", "mobile", "data science", "machine learning", "devops", "design"];
+        
+        const hasSelectedCategory = categories.some(cat => cat !== 'others' && searchString.includes(cat.toLowerCase()));
+        if (hasSelectedCategory) return true;
+        
+        if (categories.includes('others')) {
+          const hasKnownCategory = knownCategories.some(cat => searchString.includes(cat));
+          if (!hasKnownCategory) return true;
+        }
+        
+        return false;
       });
     }
 
@@ -101,7 +111,8 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                   { label: "Data Science", value: "data science" },
                   { label: "Machine Learning", value: "machine learning" },
                   { label: "DevOps", value: "devops" },
-                  { label: "UI/UX Design", value: "design" }
+                  { label: "UI/UX Design", value: "design" },
+                  { label: "Others", value: "others" }
                 ]} 
               />
               
