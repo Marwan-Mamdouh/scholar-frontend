@@ -31,7 +31,9 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
         const knownCategories = [
           "full stack", "front end", "back end", "mobile", 
           "data science", "machine learning", "devops", "design",
-          "digital design", "digital verification", "hardware"
+          "digital design", "digital verification", "hardware",
+          "data engineer", "embedded", "qa", "testing", "game dev", 
+          "network", "cloud", "infrastructure", "platform", "security", "ai"
         ];
         
         const hasSelectedCategory = categories.some(cat => cat !== 'others' && searchString.includes(cat.toLowerCase()));
@@ -126,11 +128,19 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                   { label: "Mobile Development", value: "mobile" },
                   { label: "Data Science", value: "data science" },
                   { label: "Machine Learning", value: "machine learning" },
+                  { label: "Data Engineering", value: "data engineer" },
+                  { label: "AI Engineering", value: "ai" },
                   { label: "DevOps", value: "devops" },
+                  { label: "Cloud & Infra", value: "cloud" },
+                  { label: "Security", value: "security" },
                   { label: "UI/UX Design", value: "design" },
                   { label: "Digital Design", value: "digital design" },
                   { label: "Digital Verification", value: "digital verification" },
                   { label: "Hardware Eng.", value: "hardware" },
+                  { label: "Embedded Eng.", value: "embedded" },
+                  { label: "QA & Testing", value: "qa" },
+                  { label: "Game Dev", value: "game dev" },
+                  { label: "Network Eng.", value: "network" },
                   { label: "Others", value: "others" }
                 ]} 
               />
