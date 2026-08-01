@@ -1,11 +1,13 @@
 "use client";
 
 import { FC } from "react";
+import { useRouter } from "next/navigation";
 import { Input } from "@/src/components/ui/InputField/Input";
 import dynamic from "next/dynamic";
 import notFoundAnimation from "@/src/components/assets/NotFound.json";
 import ResearcherGrid from "./ResearcherGrid";
 import type { Researcher } from "./Research.type";
+import { mockResearchers } from "./mockResearchers";
 
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
@@ -44,16 +46,15 @@ const CONTENT_DATA: Record<
 };
 
 const ResearchContent: FC<ResearchContentProps> = ({ activeTab }) => {
+  const router = useRouter();
   const currentContent = CONTENT_DATA[activeTab] || CONTENT_DATA.researchers;
 
-  // TODO(api-owner): Replace this empty array with a real call to
-  // `getResearchers()` from `./api.ts` once the backend endpoint is live.
-  // The recommended pattern is to call `getResearchers()` server-side in
-  // `app/research/page.tsx` (already an async server component) and pass
-  // the result down through ResearchContainer → ResearchContent → ResearcherGrid.
-  // See the JSDoc in `./api.ts` for the full wiring recommendation.
-  const researchers: Researcher[] = [];
-  const totalResearchers = 0;
+  // Use mock data until the real API endpoint is wired.
+  // TODO(api-owner): replace with a server-side call to `getResearchers()`
+  // once the backend endpoint is live — see the JSDoc in `./api.ts`.
+  const researchers: Researcher[] =
+    activeTab === "researchers" ? mockResearchers : [];
+  const totalResearchers = researchers.length;
 
   const hasResults = researchers.length > 0;
 
@@ -63,8 +64,7 @@ const ResearchContent: FC<ResearchContentProps> = ({ activeTab }) => {
   };
 
   const handleViewProfile = (id: string) => {
-    // TODO: wire to routing once routing logic is determined
-    console.log("view profile for", id);
+    router.push(`/research/${id}`);
   };
 
   return (

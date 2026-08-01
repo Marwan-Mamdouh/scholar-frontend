@@ -29,13 +29,13 @@ export const getCardContainerClasses = (): string => {
   const base = [
     "flex flex-col gap-4",
     "rounded-2xl",
-    "border border-neutral-500",
+    "border border-neutral-700",
     "bg-neutral-800/60",
     "p-5",
     "font-main",
-    "transition-all ease-in-out duration-300",
-    "hover:border-accent-400/50",
-    "hover:shadow-[0px_0px_12px_2px_rgba(55,181,170,0.15)]",
+    "transition-all ease-in-out duration-200",
+    "hover:border-primary-500/50",
+    "hover:shadow-[0px_0px_20px_rgba(37,116,169,0.08)]",
   ].join(" ");
 
   return base;

@@ -157,7 +157,7 @@ const ResearcherCard: FC<ResearcherCardProps> = ({
       {/* View Profile button */}
       <Button
         variant="solid"
-        intent="accent"
+        intent="primary"
         size="lg"
         className="w-full mt-auto"
         onClick={() => onViewProfile?.(researcher.id)}
