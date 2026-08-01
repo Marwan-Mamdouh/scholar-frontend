@@ -8,7 +8,7 @@ export default async function JobsPage() {
   let errorMsg: string | undefined = undefined;
 
   try {
-    const { rows } = await sql`SELECT * FROM jobs ORDER BY first_seen_at DESC LIMIT 500`;
+    const { rows } = await sql`SELECT * FROM jobs ORDER BY first_seen_at DESC`;
     initialJobs = rows;
   } catch (error: any) {
     console.error("Vercel Postgres Error:", error);
