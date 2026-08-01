@@ -138,10 +138,8 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                   { label: "UI/UX Design", value: "design" },
                   { label: "Digital Design", value: "digital design" },
                   { label: "Digital Verification", value: "digital verification" },
-                  { label: "Hardware Eng.", value: "hardware" },
                   { label: "Embedded Eng.", value: "embedded" },
                   { label: "QA & Testing", value: "qa" },
-                  { label: "Game Dev", value: "game dev" },
                   { label: "Network Eng.", value: "network" },
                   { label: "Others", value: "others" }
                 ]} 
