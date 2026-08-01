@@ -11,6 +11,7 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
   const [seniorities, setSeniorities] = useState<string[]>([]);
   const [locations, setLocations] = useState<string[]>([]);
   const [providers, setProviders] = useState<string[]>([]);
+  const [companies, setCompanies] = useState<string[]>([]);
 
   const filteredJobs = useMemo(() => {
     let result = initialJobs || [];
@@ -68,8 +69,12 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
       result = result.filter(job => providers.includes(job.source?.toLowerCase()));
     }
 
+    if (companies.length > 0) {
+      result = result.filter(job => companies.includes(job.company?.toLowerCase()));
+    }
+
     return result;
-  }, [initialJobs, searchQuery, categories, seniorities, locations, providers]);
+  }, [initialJobs, searchQuery, categories, seniorities, locations, providers, companies]);
 
   const toggleFilter = (setFilter: React.Dispatch<React.SetStateAction<string[]>>, value: string) => {
     setFilter(prev => prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]);
@@ -142,6 +147,30 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                   { label: "QA & Testing", value: "qa" },
                   { label: "Network Eng.", value: "network" },
                   { label: "Others", value: "others" }
+                ]} 
+              />
+              
+              <FilterSection 
+                title="Company" 
+                state={companies} 
+                setState={setCompanies}
+                options={[
+                  { label: "Siemens", value: "siemens" },
+                  { label: "Capgemini", value: "capgemini" },
+                  { label: "Cisco", value: "cisco" },
+                  { label: "Siemens Energy", value: "siemens energy" },
+                  { label: "STMicroelectronics", value: "stmicroelectronics" },
+                  { label: "MediaTek", value: "mediatek" },
+                  { label: "Brightskies", value: "brightskies" },
+                  { label: "HCLTech", value: "hcltech" },
+                  { label: "Nawy", value: "nawy" },
+                  { label: "Analog Devices", value: "analog devices" },
+                  { label: "InfiniLink", value: "infinilink" },
+                  { label: "Valeo", value: "valeo" },
+                  { label: "Siemens Gamesa", value: "siemens gamesa" },
+                  { label: "ISS INTERNATIONAL SpA", value: "iss international spa" },
+                  { label: "Siemens Digital Industries Software", value: "siemens digital industries software" },
+                  { label: "Mixel-Egypt", value: "mixel-egypt" }
                 ]} 
               />
               
