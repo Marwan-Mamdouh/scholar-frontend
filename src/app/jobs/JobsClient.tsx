@@ -30,11 +30,8 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
       result = result.filter(job => {
         const searchString = `${job.title} ${job.tags_json}`.toLowerCase();
         const knownCategories = [
-          "full stack", "front end", "back end", "mobile", 
-          "data science", "machine learning", "devops", "design",
-          "digital design", "digital verification", "hardware",
-          "data engineer", "data analyst", "data analytics", "software engineer", "embedded", "qa", "testing", "game dev", 
-          "network", "cloud", "infrastructure", "platform", "security", "ai"
+          "software", "computer science", "information technology", "engineering",
+          "data", "marketing", "business", "design", "web"
         ];
         
         const hasSelectedCategory = categories.some(cat => cat !== 'others' && searchString.includes(cat.toLowerCase()));
@@ -127,25 +124,15 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                 state={categories} 
                 setState={setCategories}
                 options={[
-                  { label: "Full Stack", value: "full stack" },
-                  { label: "Software Engineer", value: "software engineer" },
-                  { label: "Front-End", value: "front end" },
-                  { label: "Back-End", value: "back end" },
-                  { label: "Mobile Development", value: "mobile" },
-                  { label: "Data Science", value: "data science" },
-                  { label: "Data Analyst", value: "data analyt" },
-                  { label: "Machine Learning", value: "machine learning" },
-                  { label: "Data Engineering", value: "data engineer" },
-                  { label: "AI Engineering", value: "ai" },
-                  { label: "DevOps", value: "devops" },
-                  { label: "Cloud & Infra", value: "cloud" },
-                  { label: "Security", value: "security" },
-                  { label: "UI/UX Design", value: "design" },
-                  { label: "Digital Design", value: "digital design" },
-                  { label: "Digital Verification", value: "digital verification" },
-                  { label: "Embedded Eng.", value: "embedded" },
-                  { label: "QA & Testing", value: "qa" },
-                  { label: "Network Eng.", value: "network" },
+                  { label: "IT / Software Development", value: "software" },
+                  { label: "Computer Science", value: "computer science" },
+                  { label: "Information Technology (IT)", value: "information technology" },
+                  { label: "Engineering & Telecom", value: "engineering" },
+                  { label: "Data & Analytics", value: "data" },
+                  { label: "Marketing & PR", value: "marketing" },
+                  { label: "Business & Operations", value: "business" },
+                  { label: "Design (UI/UX)", value: "design" },
+                  { label: "Web & Mobile", value: "web" },
                   { label: "Others", value: "others" }
                 ]} 
               />
