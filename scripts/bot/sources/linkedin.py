@@ -66,7 +66,6 @@ LINKEDIN_SEARCHES: list[dict[str, str]] = [
     _fresh_params(keywords="devops engineer", location="Egypt")
 ]
 
-TARGET_MAX_JOBS_PER_RUN = 35
 
 DEFAULT_REQUEST_DELAY_SECONDS = float(os.getenv("LINKEDIN_REQUEST_DELAY", "15"))
 DEFAULT_MAX_PAGES_PER_SEARCH = int(os.getenv("LINKEDIN_MAX_PAGES_PER_SEARCH", "1"))
@@ -141,10 +140,6 @@ def fetch_linkedin(
     pages_requested = 0
 
     for base_params in selected_searches:
-        if len(jobs) >= TARGET_MAX_JOBS_PER_RUN:
-            log.info("Reached target job limit (%d), stopping further LinkedIn searches.", TARGET_MAX_JOBS_PER_RUN)
-            break
-            
         for page_idx in range(max_pages_per_search):
             params = dict(base_params)
             params["start"] = str(page_idx * PAGE_SIZE)
