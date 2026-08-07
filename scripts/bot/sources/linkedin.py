@@ -34,7 +34,7 @@ BASE_URL = "https://www.linkedin.com"
 # We intentionally use a rolling 1-hour freshness window while the workflow runs
 # every ~15 minutes. Deduplication in SQLite removes overlap, and the wider
 # window reduces the chance of missing jobs when GitHub Actions starts late.
-DEFAULT_FRESHNESS_SECONDS = int(os.getenv("LINKEDIN_FRESHNESS_SECONDS", "3600"))
+DEFAULT_FRESHNESS_SECONDS = int(os.getenv("LINKEDIN_FRESHNESS_SECONDS", "86400"))
 LINKEDIN_DEFAULT_PARAMS = {"f_TPR": f"r{DEFAULT_FRESHNESS_SECONDS}", "sortBy": "DD"}
 
 
@@ -68,7 +68,7 @@ LINKEDIN_SEARCHES: list[dict[str, str]] = [
 
 TARGET_MAX_JOBS_PER_RUN = 35
 
-DEFAULT_REQUEST_DELAY_SECONDS = float(os.getenv("LINKEDIN_REQUEST_DELAY", "4"))
+DEFAULT_REQUEST_DELAY_SECONDS = float(os.getenv("LINKEDIN_REQUEST_DELAY", "15"))
 DEFAULT_MAX_PAGES_PER_SEARCH = int(os.getenv("LINKEDIN_MAX_PAGES_PER_SEARCH", "1"))
 PAGE_SIZE = 25
 
@@ -152,10 +152,8 @@ def fetch_linkedin(
 
             page_html = getter(SEARCH_URL, params=params, headers=_headers())
             if not page_html:
-                log.warning("LinkedIn: no response for %s", _safe_params_for_log(params))
-                if request_delay:
-                    time.sleep(request_delay)
-                continue
+                log.warning("LinkedIn: no response for %s. Stopping further LinkedIn searches to avoid ban.", _safe_params_for_log(params))
+                return jobs
 
             parsed = parse_linkedin_html(page_html, search_params=params, max_age_seconds=DEFAULT_FRESHNESS_SECONDS)
             for job in parsed:
