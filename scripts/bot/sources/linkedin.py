@@ -44,34 +44,29 @@ def _fresh_params(**params: str) -> dict[str, str]:
     return merged
 
 
-LINKEDIN_SEARCHES: list[dict[str, str]] = [
-    # Egypt — core community topics
-    _fresh_params(keywords="software developer", location="Egypt"),
-    _fresh_params(keywords="backend developer", location="Egypt"),
-    _fresh_params(keywords="frontend developer", location="Egypt"),
-    _fresh_params(keywords="mobile developer", location="Egypt"),
-    _fresh_params(keywords="data analyst", location="Egypt"),
-    _fresh_params(keywords="digital marketing", location="Egypt"),
-    _fresh_params(keywords="graphic designer", location="Egypt"),
-    _fresh_params(keywords="business analyst", location="Egypt"),
-    _fresh_params(keywords="application support", location="Egypt"),
-    _fresh_params(keywords="odoo developer", location="Egypt"),
-    _fresh_params(keywords="QA engineer", location="Egypt"),
-    _fresh_params(keywords="devops engineer", location="Egypt"),
-    _fresh_params(keywords="product manager", location="Egypt"),
-    # Saudi — smaller coverage
-    _fresh_params(keywords="software developer", location="Saudi Arabia"),
-    _fresh_params(keywords="data analyst", location="Saudi Arabia"),
-    _fresh_params(keywords="digital marketing", location="Saudi Arabia"),
-    _fresh_params(keywords="business analyst", location="Saudi Arabia"),
-    _fresh_params(keywords="application support", location="Saudi Arabia"),
-    _fresh_params(keywords="SAP developer", location="Saudi Arabia"),
-    # Remote — limited, global
-    _fresh_params(keywords="software developer", f_WT="2"),
-    _fresh_params(keywords="data analyst", f_WT="2"),
-    _fresh_params(keywords="digital marketing", f_WT="2"),
-    _fresh_params(keywords="ui ux designer", f_WT="2"),
+TARGET_COMPANIES = [
+    "Siemens", "Capgemini", "Cisco", "Siemens Energy", "STMicroelectronics", 
+    "MediaTek", "Brightskies", "HCLTech", "Nawy", "Analog Devices", 
+    "InfiniLink", "Valeo", "Siemens Gamesa", "ISS INTERNATIONAL SpA", 
+    "Siemens Digital Industries Software", "Mixel-Egypt", "Si vision", "global foundaries", "si bits"
 ]
+
+LINKEDIN_SEARCHES: list[dict[str, str]] = [
+    # 1. Target Companies First
+    _fresh_params(keywords=company, location="Egypt") for company in TARGET_COMPANIES
+] + [
+    # 2. Frontend / Software Development (the filtering jobs in the front end)
+    _fresh_params(keywords="frontend developer", location="Egypt"),
+    _fresh_params(keywords="software development", location="Egypt"),
+    _fresh_params(keywords="software engineer", location="Egypt"),
+    # 3. Filtering other based on engineering
+    _fresh_params(keywords="engineering", location="Egypt"),
+    _fresh_params(keywords="data analyst", location="Egypt"),
+    _fresh_params(keywords="QA engineer", location="Egypt"),
+    _fresh_params(keywords="devops engineer", location="Egypt")
+]
+
+TARGET_MAX_JOBS_PER_RUN = 35
 
 DEFAULT_REQUEST_DELAY_SECONDS = float(os.getenv("LINKEDIN_REQUEST_DELAY", "4"))
 DEFAULT_MAX_PAGES_PER_SEARCH = int(os.getenv("LINKEDIN_MAX_PAGES_PER_SEARCH", "1"))
@@ -146,6 +141,10 @@ def fetch_linkedin(
     pages_requested = 0
 
     for base_params in selected_searches:
+        if len(jobs) >= TARGET_MAX_JOBS_PER_RUN:
+            log.info("Reached target job limit (%d), stopping further LinkedIn searches.", TARGET_MAX_JOBS_PER_RUN)
+            break
+            
         for page_idx in range(max_pages_per_search):
             params = dict(base_params)
             params["start"] = str(page_idx * PAGE_SIZE)

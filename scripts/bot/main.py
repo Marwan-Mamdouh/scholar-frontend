@@ -101,10 +101,7 @@ def should_keep_job(job: Job) -> bool:
     if not job.title or not job.url:
         return False
 
-    source = (job.source or "").strip().lower()
-    if source == "linkedin":
-        return passes_geo_filter(job)
-
+    # All jobs must pass the programming/engineering keyword filter
     return is_programming_job(job) and passes_geo_filter(job)
 
 

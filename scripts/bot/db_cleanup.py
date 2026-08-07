@@ -26,10 +26,25 @@ def run_cleanup(should_delete=False):
     # We will identify jobs that are clearly NOT engineering/tech related
     # based on some of the roles we saw earlier like Marketing, SEO, etc.
     junk_keywords = [
-        '%marketing%', '%seo%', '%sales%', '%human resources%', 
-        '%hr %', '%recruiter%', '%accountant%', '%finance%',
-        '%business development%', '%content writer%', '%copywriter%'
+        '%market%', '%seo%', '%sales%', '%human resources%', 
+        '%hr %', '%recruit%', '%talent%', '%account%', '%finance%',
+        '%financial%', '%tax%', '%business development%', '%bd %',
+        '%content%', '%copywriter%', '%writer%', '%editor%', '%media%',
+        '%annotator%', '%kitchen%', '%chef%', '%assistant%', '%office%',
+        '%legal%', '%lawyer%', '%attorney%', '%coach%', '%instructor%',
+        '%teacher%', '%translator%', '%translation%', '%procurement%',
+        '%supply chain%', '%logistics%', '%cargo%', '%inventory%',
+        '%merchandiser%', '%quality inspector%', '%pharmac%', '%clinic%',
+        '%doctor%', '%nurse%', '%medical%', '%healthcare%', '%civil%',
+        '%mechanical%', '%growth%', '%strategy%', '%strategist%',
+        '%creative%', '%art director%', '%buyer%', '%customer service%',
+        '%customer success%', '%operations%', '%event%', '%social%',
+        '%brand%', '%ecommerce%', '%e-commerce%', '%community%',
+        '%partnership%', '%public relations%', '%pr %', '%communications%',
+        '%journalis%', '%video%', '%photo%', '%design%' # Wait, UI/UX is design. Let's exclude design to be safe.
     ]
+    # Remove '%design%' from junk to avoid deleting UI/UX roles, but add specific ones:
+    junk_keywords.extend(['%graphic design%', '%interior design%', '%fashion%'])
     
     try:
         with conn.cursor() as cur:
