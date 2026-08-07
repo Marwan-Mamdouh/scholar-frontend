@@ -343,6 +343,32 @@ def get_source_last_run(conn: connection, source: str) -> Optional[str]:
         return str(row["last_run_at"]) if row and row["last_run_at"] else None
 
 
+def estimate_dynamic_limit(conn: connection, days: int = 14, runs_per_day: int = 4, buffer_multiplier: float = 2.0) -> int:
+    """Calculate a dynamic job limit based on historical insertion rates."""
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT count(*) 
+            FROM jobs 
+            WHERE first_seen_at >= (NOW() - INTERVAL '%s days')::text
+            """,
+            (days,)
+        )
+        total_recent_jobs = cur.fetchone()[0] or 0
+        
+    if total_recent_jobs == 0:
+        return 35  # Fallback to default if no history
+
+    average_jobs_per_day = total_recent_jobs / days
+    expected_jobs_per_run = average_jobs_per_day / runs_per_day
+    
+    # Add buffer to ensure we don't artificially cap a high-volume run
+    dynamic_limit = int(expected_jobs_per_run * buffer_multiplier)
+    
+    # Keep it within reasonable bounds to prevent LinkedIn bans
+    return max(15, min(dynamic_limit, 50))
+
+
 def count_jobs(conn: connection) -> int:
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
         cur.execute("SELECT COUNT(*) AS c FROM jobs")

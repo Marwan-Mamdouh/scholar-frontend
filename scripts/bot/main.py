@@ -35,6 +35,7 @@ from db import (
     set_job_send_status,
     update_source_run,
     upsert_jobs,
+    estimate_dynamic_limit,
 )
 
 # ─── Logging ─────────────────────────────────────────────────
@@ -229,6 +230,18 @@ def run_bot(
         log.warning(f"Cleanup failed (non-critical): {exc}")
 
     with connect(db_path) as conn:
+        dynamic_limit = estimate_dynamic_limit(conn)
+        log.info(f"Dynamic LinkedIn limit estimated at: {dynamic_limit} jobs")
+        
+        try:
+            try:
+                import sources.linkedin as li
+            except ImportError:
+                import linkedin as li
+            li.TARGET_MAX_JOBS_PER_RUN = dynamic_limit
+        except Exception as e:
+            log.warning(f"Could not set dynamic limit: {e}")
+
         all_jobs = fetch_all_jobs(conn, fetchers)
         summary.raw_jobs = len(all_jobs)
         log.info(f"Total raw jobs fetched: {summary.raw_jobs}")
