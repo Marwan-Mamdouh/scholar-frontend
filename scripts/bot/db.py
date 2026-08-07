@@ -113,7 +113,8 @@ def init_db(conn: connection) -> None:
                 content_hash TEXT NOT NULL UNIQUE,
                 send_status TEXT NOT NULL DEFAULT 'pending',
                 first_seen_at TEXT NOT NULL,
-                last_seen_at TEXT NOT NULL
+                last_seen_at TEXT NOT NULL,
+                is_taken BOOLEAN DEFAULT false
             );
 
             CREATE INDEX IF NOT EXISTS idx_jobs_send_status
@@ -144,6 +145,8 @@ def init_db(conn: connection) -> None:
                 error TEXT DEFAULT '',
                 updated_at TEXT NOT NULL
             );
+            
+            ALTER TABLE jobs ADD COLUMN IF NOT EXISTS is_taken BOOLEAN DEFAULT false;
         """)
         
         cur.execute(

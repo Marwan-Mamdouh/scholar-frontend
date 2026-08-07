@@ -12,9 +12,35 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
   const [locations, setLocations] = useState<string[]>([]);
   const [providers, setProviders] = useState<string[]>([]);
   const [companies, setCompanies] = useState<string[]>([]);
+  const [hiddenJobs, setHiddenJobs] = useState<Set<number>>(new Set());
+
+  const handleMarkAsTaken = async (jobId: number) => {
+    // Optimistic UI update
+    setHiddenJobs(prev => new Set(prev).add(jobId));
+
+    try {
+      const res = await fetch('/api/jobs/take', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: jobId })
+      });
+      if (!res.ok) {
+        throw new Error('Failed to mark as taken');
+      }
+    } catch (err) {
+      console.error(err);
+      // Revert optimistic update
+      setHiddenJobs(prev => {
+        const next = new Set(prev);
+        next.delete(jobId);
+        return next;
+      });
+      alert("Failed to update job status.");
+    }
+  };
 
   const filteredJobs = useMemo(() => {
-    let result = initialJobs || [];
+    let result = (initialJobs || []).filter(job => !hiddenJobs.has(job.id));
 
     if (searchQuery.trim()) {
       const lowerQuery = searchQuery.toLowerCase();
@@ -71,7 +97,7 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
     }
 
     return result;
-  }, [initialJobs, searchQuery, categories, seniorities, locations, providers, companies]);
+  }, [initialJobs, searchQuery, categories, seniorities, locations, providers, companies, hiddenJobs]);
 
   const toggleFilter = (setFilter: React.Dispatch<React.SetStateAction<string[]>>, value: string) => {
     setFilter(prev => prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]);
@@ -312,16 +338,25 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                       )}
                     </div>
                     
-                    <div className="px-6 py-4 bg-black/20 border-t border-white/5 mt-auto">
+                    <div className="px-6 py-4 bg-black/20 border-t border-white/5 mt-auto flex gap-2">
                       <Button
                         onClick={() => window.open(job.url, '_blank')}
                         intent="accent"
                         variant="outlined"
                         size="md"
-                        className="w-full border-white/20 text-white hover:text-accent-200"
+                        className="flex-1 border-white/20 text-white hover:text-accent-200"
                         iconRight={<ExternalLink className="w-4 h-4" />}
                       >
                         Apply Now
+                      </Button>
+                      <Button
+                        onClick={() => handleMarkAsTaken(job.id)}
+                        intent="danger"
+                        variant="outlined"
+                        size="md"
+                        className="flex-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-transparent hover:border-red-500/30"
+                      >
+                        Hide Job
                       </Button>
                     </div>
                   </div>
