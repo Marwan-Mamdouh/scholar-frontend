@@ -45,7 +45,7 @@ const FlowStageButton = ({
         <span className="block font-main text-h4 text-neutral-50">
           {stage.name}
         </span>
-        <span className="mt-1 block font-secondary text-sm leading-relaxed text-neutral-200">
+        <span className="mt-1 block font-secondary text-subtext leading-relaxed text-neutral-200">
           {stage.desc}
         </span>
       </span>

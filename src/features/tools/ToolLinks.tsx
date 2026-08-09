@@ -26,7 +26,7 @@ const ToolLinks = ({ intent = "primary", ...links }: ToolLinksProps) => {
   const className = getButtonClasses({
     variant: "link",
     intent: getToolsTheme(intent).button,
-    size: "sm",
+    size: "lg",
   });
 
   return (

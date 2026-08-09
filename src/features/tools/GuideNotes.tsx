@@ -20,7 +20,7 @@ const GuideNotes = ({ items, intent = "accent" }: GuideNotesProps) => {
 
           <div className="min-w-0 flex-1">
             <p className="font-main text-h4 text-neutral-50">{note.title}</p>
-            <p className="mt-1.5 font-secondary text-sm leading-relaxed text-neutral-100">
+            <p className="mt-1.5 font-secondary text-subtext leading-relaxed text-neutral-100">
               {note.desc}
             </p>
           </div>

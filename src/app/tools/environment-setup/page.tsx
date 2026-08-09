@@ -3,6 +3,7 @@ import {
   GuideNotes,
   GuideSteps,
   SectionHeading,
+  ToolsContainer,
   ToolsHero,
   environmentSetup,
 } from "@/src/features/tools";
@@ -21,21 +22,23 @@ export default function EnvironmentSetupPage() {
     <>
       <ToolsHero {...hero} intent={INTENT} />
 
-      {phases.map((phase) => (
-        <section key={phase.label} className="mt-18 flex flex-col gap-8">
-          <SectionHeading
-            label={phase.label}
-            title={phase.title}
-            intent={INTENT}
-          />
-          <GuideSteps steps={phase.steps} intent={INTENT} />
-        </section>
-      ))}
+      <ToolsContainer>
+        {phases.map((phase) => (
+          <section key={phase.label} className="mt-18 flex flex-col gap-8">
+            <SectionHeading
+              label={phase.label}
+              title={phase.title}
+              intent={INTENT}
+            />
+            <GuideSteps steps={phase.steps} intent={INTENT} />
+          </section>
+        ))}
 
-      <section className="mt-18 flex flex-col gap-8">
-        <SectionHeading label={notes.label} intent={INTENT} />
-        <GuideNotes items={notes.items} intent={INTENT} />
-      </section>
+        <section className="mt-18 flex flex-col gap-8">
+          <SectionHeading label={notes.label} intent={INTENT} />
+          <GuideNotes items={notes.items} intent={INTENT} />
+        </section>
+      </ToolsContainer>
     </>
   );
 }

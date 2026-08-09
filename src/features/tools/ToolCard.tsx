@@ -14,7 +14,7 @@ const ToolCard = ({ tool, label, intent = "primary" }: ToolCardProps) => {
 
   return (
     <article className="flex flex-col gap-3 rounded-3xl border border-neutral-700 bg-neutral-800/40 px-5 py-5 transition-all duration-500 ease-in-out hover:bg-neutral-800/70">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col-reverse items-start gap-2 sm:flex-row sm:justify-between sm:gap-3">
         <h3 className="min-w-0 font-main text-h4 break-words text-neutral-50">
           {tool.name}
           {tool.core && (
@@ -38,7 +38,7 @@ const ToolCard = ({ tool, label, intent = "primary" }: ToolCardProps) => {
         </Badge>
       </div>
 
-      <p className="flex-1 font-secondary text-sm leading-relaxed text-neutral-100">
+      <p className="flex-1 font-secondary text-subtext leading-relaxed text-neutral-100">
         {tool.desc}
       </p>
 

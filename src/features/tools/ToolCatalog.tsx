@@ -37,7 +37,7 @@ const ToolCatalog = ({
           return (
             <Button
               key={filter.id}
-              size="sm"
+              size="lg"
               variant={isActive ? "solid" : "outlined"}
               intent={isActive ? theme.button : "secondary"}
               aria-pressed={isActive}
