@@ -24,7 +24,7 @@ const GuideSteps = ({ steps, intent = "accent" }: GuideStepsProps) => {
 
           <div className="min-w-0 flex-1">
             <h3 className="font-main text-h4 text-neutral-50">{step.title}</h3>
-            <div className="mt-1.5 flex flex-col gap-2 font-secondary text-sm leading-relaxed text-neutral-100">
+            <div className="mt-1.5 flex flex-col gap-2 font-secondary text-subtext leading-relaxed text-neutral-100">
               {step.description}
             </div>
           </div>

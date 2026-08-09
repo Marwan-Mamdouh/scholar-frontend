@@ -7,6 +7,7 @@ import {
   SectionHeading,
   ToolCatalog,
   ToolFlow,
+  ToolsContainer,
   ToolsHero,
 } from "@/src/features/tools";
 
@@ -44,40 +45,42 @@ export default async function ToolsDomainPage(props: {
     <>
       <ToolsHero {...hero} intent={intent} />
 
-      <section className="mt-18 flex flex-col gap-8">
-        <SectionHeading
-          label={references.label}
-          title={references.title}
-          subtitle={references.subtitle}
-          intent={intent}
-        />
-        <ReferenceList links={references.links} intent={intent} />
-      </section>
+      <ToolsContainer>
+        <section className="mt-18 flex flex-col gap-8">
+          <SectionHeading
+            label={references.label}
+            title={references.title}
+            subtitle={references.subtitle}
+            intent={intent}
+          />
+          <ReferenceList links={references.links} intent={intent} />
+        </section>
 
-      <section className="mt-18 flex flex-col gap-8">
-        <SectionHeading
-          label={flow.label}
-          title={flow.title}
-          subtitle={flow.subtitle}
-          intent={intent}
-        />
-        <ToolFlow rows={flow.rows} panels={panels} intent={intent} />
-      </section>
+        <section className="mt-18 flex flex-col gap-8">
+          <SectionHeading
+            label={flow.label}
+            title={flow.title}
+            subtitle={flow.subtitle}
+            intent={intent}
+          />
+          <ToolFlow rows={flow.rows} panels={panels} intent={intent} />
+        </section>
 
-      <section className="mt-18 flex flex-col gap-8">
-        <SectionHeading
-          label={catalog.label}
-          title={catalog.title}
-          subtitle={catalog.subtitle}
-          intent={intent}
-        />
-        <ToolCatalog
-          filters={catalog.filters}
-          labels={catalog.labels}
-          tools={catalog.tools}
-          intent={intent}
-        />
-      </section>
+        <section className="mt-18 flex flex-col gap-8">
+          <SectionHeading
+            label={catalog.label}
+            title={catalog.title}
+            subtitle={catalog.subtitle}
+            intent={intent}
+          />
+          <ToolCatalog
+            filters={catalog.filters}
+            labels={catalog.labels}
+            tools={catalog.tools}
+            intent={intent}
+          />
+        </section>
+      </ToolsContainer>
     </>
   );
 }

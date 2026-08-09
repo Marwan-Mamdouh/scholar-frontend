@@ -46,7 +46,7 @@ const StagePanel = ({ panel, intent, onClose }: StagePanelProps) => {
 
       <aside
         aria-label={panel.title}
-        className="fixed inset-y-0 right-0 z-[70] flex w-full max-w-2xl flex-col overflow-y-auto border-l border-neutral-700 bg-neutral-900 shadow-[0px_0px_40px_10px_rgba(0,0,0,0.45)]"
+        className="fixed inset-y-0 right-0 z-[70] flex w-[85%] max-w-2xl flex-col overflow-y-auto border-l border-neutral-700 bg-neutral-900 shadow-[0px_0px_40px_10px_rgba(0,0,0,0.45)]"
       >
         <div className="sticky top-0 z-10 flex items-start gap-4 border-b border-neutral-700 bg-neutral-900/95 px-6 py-6 backdrop-blur-[7.5px] sm:px-8">
           <div className="min-w-0 flex-1">
@@ -58,7 +58,7 @@ const StagePanel = ({ panel, intent, onClose }: StagePanelProps) => {
             <h2 className="mt-2 font-main text-h3 tracking-display text-neutral-50">
               {panel.title}
             </h2>
-            <p className="mt-2.5 font-secondary text-sm leading-relaxed text-neutral-100">
+            <p className="mt-2.5 font-secondary text-subtext leading-relaxed text-neutral-100">
               {panel.desc}
             </p>
           </div>
@@ -68,7 +68,7 @@ const StagePanel = ({ panel, intent, onClose }: StagePanelProps) => {
             variant="icon"
             intent="secondary"
             size="lg"
-            onClick={close}
+            onClick={onClose}
           >
             <X className="h-5 w-5" />
           </Button>
@@ -103,12 +103,12 @@ const StagePanel = ({ panel, intent, onClose }: StagePanelProps) => {
                       ))}
                     </div>
 
-                    <p className="font-secondary text-sm leading-relaxed text-neutral-100">
+                    <p className="font-secondary text-subtext leading-relaxed text-neutral-100">
                       {tool.desc}
                     </p>
 
                     {tool.use && (
-                      <p className="font-secondary text-sm text-neutral-200">
+                      <p className="font-secondary text-subtext text-neutral-200">
                         <span className={theme.text}>When to use:</span>{" "}
                         {tool.use}
                       </p>
