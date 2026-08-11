@@ -1,9 +1,20 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { MapPin, Briefcase, Building, ExternalLink, Calendar, Search, AlertCircle, Filter } from 'lucide-react';
+import { MapPin, Briefcase, Building, ExternalLink, Calendar, Search, AlertCircle, Filter, ChevronDown, ChevronUp, X } from 'lucide-react';
 import Button from "@/src/components/ui/Button/Button";
 import LightingGlow from "@/src/components/ui/LightingGlow/LightingGlow";
+
+const formatDate = (dateStr?: string) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+};
 
 export default function JobsClient({ initialJobs, serverError }: { initialJobs: any[], serverError?: string }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -103,24 +114,96 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
     setFilter(prev => prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]);
   };
 
-  const FilterSection = ({ title, options, state, setState }: { title: string, options: { label: string, value: string }[], state: string[], setState: React.Dispatch<React.SetStateAction<string[]>> }) => (
-    <div className="mb-6">
-      <h3 className="font-bold text-primary-300 mb-3">{title}</h3>
-      <div className="space-y-2">
-        {options.map(option => (
-          <label key={option.value} className="flex items-center space-x-3 cursor-pointer group">
-            <input
-              type="checkbox"
-              checked={state.includes(option.value)}
-              onChange={() => toggleFilter(setState, option.value)}
-              className="h-4 w-4 text-accent-400 border-neutral-600 rounded focus:ring-accent-400 cursor-pointer bg-white/10"
-            />
-            <span className="text-neutral-100 group-hover:text-accent-300 transition-colors text-sm font-medium">{option.label}</span>
-          </label>
-        ))}
+  const hasActiveFilters = categories.length > 0 || seniorities.length > 0 || locations.length > 0 || providers.length > 0 || companies.length > 0 || searchQuery.trim().length > 0;
+
+  const clearAllFilters = () => {
+    setSearchQuery('');
+    setCategories([]);
+    setSeniorities([]);
+    setLocations([]);
+    setProviders([]);
+    setCompanies([]);
+  };
+
+  const FilterSection = ({ 
+    title, 
+    options, 
+    state, 
+    setState,
+    defaultOpen = true
+  }: { 
+    title: string, 
+    options: { label: string, value: string }[], 
+    state: string[], 
+    setState: React.Dispatch<React.SetStateAction<string[]>>,
+    defaultOpen?: boolean
+  }) => {
+    const [isOpen, setIsOpen] = useState(defaultOpen);
+    const selectedCount = state.length;
+
+    return (
+      <div className="border-b border-white/10 py-4 last:border-b-0">
+        <div 
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center justify-between cursor-pointer select-none group"
+        >
+          <div className="flex items-center gap-2">
+            <h3 className="font-bold text-neutral-100 group-hover:text-primary-300 transition-colors text-base">
+              {title}
+            </h3>
+            {selectedCount > 0 && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-accent-400/20 text-accent-300 border border-accent-400/30">
+                {selectedCount}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {selectedCount > 0 && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setState([]);
+                }}
+                className="text-xs font-medium text-accent-400 hover:text-accent-300 transition-colors px-2 py-0.5 rounded border border-accent-400/30 bg-accent-400/10"
+              >
+                Clear
+              </button>
+            )}
+            <button 
+              type="button" 
+              className="text-neutral-400 group-hover:text-neutral-200 transition-colors p-1"
+              aria-label={isOpen ? `Collapse ${title}` : `Expand ${title}`}
+            >
+              {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+
+        {isOpen && (
+          <div className="mt-3 space-y-2.5 pl-1 transition-all duration-200 ease-in-out">
+            {options.map(option => {
+              const isChecked = state.includes(option.value);
+              return (
+                <label key={option.value} className="flex items-center space-x-3 cursor-pointer group/item py-0.5">
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => toggleFilter(setState, option.value)}
+                    className="h-4 w-4 text-accent-400 border-neutral-600 rounded focus:ring-accent-400 cursor-pointer bg-white/10 accent-accent-500"
+                  />
+                  <span className={`text-sm font-medium transition-colors ${isChecked ? 'text-accent-300 font-semibold' : 'text-neutral-200 group-hover/item:text-white'}`}>
+                    {option.label}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen bg-transparent font-main tracking-eyebrow pt-28 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -140,15 +223,27 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
           {/* Sidebar */}
           <aside className="w-full lg:w-1/4 flex-shrink-0">
             <div className="bg-white/5 p-6 rounded-xl shadow-sm border border-accent-200/50 sticky top-4">
-              <div className="flex items-center gap-2 mb-6 pb-4 border-b border-white/10">
-                <Filter className="w-5 h-5 text-neutral-300" />
-                <h2 className="text-lg font-bold text-neutral-50 tracking-display">Filters</h2>
+              <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <Filter className="w-5 h-5 text-neutral-300" />
+                  <h2 className="text-lg font-bold text-neutral-50 tracking-display">Filters</h2>
+                </div>
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearAllFilters}
+                    className="text-xs font-semibold text-red-400 hover:text-red-300 transition-colors flex items-center gap-1 bg-red-500/10 px-2.5 py-1 rounded border border-red-500/20"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    Reset All
+                  </button>
+                )}
               </div>
               
               <FilterSection 
                 title="Category" 
                 state={categories} 
                 setState={setCategories}
+                defaultOpen={true}
                 options={[
                   { label: "IT / Software Development", value: "software" },
                   { label: "Computer Science", value: "computer science" },
@@ -167,6 +262,7 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                 title="Company" 
                 state={companies} 
                 setState={setCompanies}
+                defaultOpen={false}
                 options={[
                   { label: "Siemens", value: "siemens" },
                   { label: "Capgemini", value: "capgemini" },
@@ -191,6 +287,7 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                 title="Seniority Level" 
                 state={seniorities} 
                 setState={setSeniorities}
+                defaultOpen={true}
                 options={[
                   { label: "Junior", value: "junior" },
                   { label: "Mid-Level", value: "mid" },
@@ -202,6 +299,7 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                 title="Work Location" 
                 state={locations} 
                 setState={setLocations}
+                defaultOpen={true}
                 options={[
                   { label: "Remote", value: "remote" },
                   { label: "Onsite", value: "onsite" }
@@ -212,6 +310,7 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                 title="Website Provider" 
                 state={providers} 
                 setState={setProviders}
+                defaultOpen={true}
                 options={[
                   { label: "LinkedIn", value: "linkedin" },
                   { label: "Wuzzuf", value: "wuzzuf" }
@@ -285,8 +384,8 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                           {job.source}
                         </span>
                         <span className="text-xs text-neutral-300 flex items-center">
-                          <Calendar className="w-3 h-3 mr-1" />
-                          {new Date(job.first_seen_at).toLocaleDateString()}
+                          <Calendar className="w-3 h-3 mr-1 text-primary-300" />
+                          {formatDate(job.first_seen_at)}
                         </span>
                       </div>
                       

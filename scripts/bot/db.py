@@ -1,5 +1,5 @@
 """
-PostgreSQL persistence layer for the Telegram jobs bot.
+PostgreSQL & Local JSON persistence layer for the Telegram jobs bot.
 """
 
 from __future__ import annotations
@@ -64,17 +64,60 @@ class StoredJob:
         )
 
 
+def is_json_db_mode() -> bool:
+    if os.environ.get("USE_LOCAL_JSON_DB", "").lower() in ("true", "1", "yes"):
+        return True
+    try:
+        env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".env.local"))
+        if os.path.exists(env_path):
+            with open(env_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    if line.strip().startswith("USE_LOCAL_JSON_DB="):
+                        val = line.strip().split("=", 1)[1].strip('"\'').lower()
+                        return val in ("true", "1", "yes")
+    except Exception:
+        pass
+    return False
+
+
+def get_json_db_filepath() -> str:
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "jobs_export.json"))
+
+
 def get_postgres_url() -> str:
     url = os.environ.get("POSTGRES_URL")
+    if not url:
+        try:
+            env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".env.local"))
+            if os.path.exists(env_path):
+                with open(env_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        if line.strip().startswith("POSTGRES_URL="):
+                            url = line.strip().split("=", 1)[1].strip('"\'')
+        except Exception:
+            pass
     if not url:
         raise ValueError("POSTGRES_URL environment variable is missing!")
     return url
 
 
+class DummyJsonConnection:
+    def commit(self):
+        pass
+    def rollback(self):
+        pass
+    def close(self):
+        pass
+
+
 @contextmanager
 def connect(db_path: str = "") -> Iterator[connection]:
-    """Open a PostgreSQL connection and ensure schema exists."""
-    # db_path is ignored for postgres, kept for API compatibility with main.py
+    """Open a PostgreSQL or Local JSON database connection."""
+    if is_json_db_mode():
+        conn = DummyJsonConnection()
+        yield conn
+        return
+
     conn = psycopg2.connect(get_postgres_url())
     try:
         init_db(conn)
@@ -89,6 +132,13 @@ def connect(db_path: str = "") -> Iterator[connection]:
 
 def init_db(conn: connection) -> None:
     """Create or migrate the database schema in PostgreSQL."""
+    if is_json_db_mode():
+        filepath = get_json_db_filepath()
+        if not os.path.exists(filepath):
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump([], f)
+        return
+
     with conn.cursor() as cur:
         cur.execute("""
             CREATE TABLE IF NOT EXISTS metadata (
@@ -219,6 +269,73 @@ def upsert_job(conn: connection, job: Job) -> tuple[int, bool]:
     source_job_id = str(getattr(job, "source_job_id", "") or "")
     tags_json = json.dumps(job.tags or [], ensure_ascii=False, sort_keys=True)
 
+    if is_json_db_mode():
+        filepath = get_json_db_filepath()
+        jobs_data = []
+        if os.path.exists(filepath):
+            with open(filepath, "r", encoding="utf-8") as f:
+                try:
+                    jobs_data = json.load(f)
+                except Exception:
+                    jobs_data = []
+
+        existing = None
+        for item in jobs_data:
+            if item.get("content_hash") == content_hash:
+                existing = item
+                break
+
+        if existing:
+            job_id = existing["id"]
+            existing.update({
+                "source": job.source,
+                "source_job_id": source_job_id,
+                "title": job.title,
+                "company": job.company or "",
+                "location": job.location or "",
+                "url": job.url,
+                "canonical_url": canonical_url,
+                "salary": job.salary or "",
+                "job_type": job.job_type or "",
+                "tags_json": tags_json,
+                "is_remote": 1 if job.is_remote else 0,
+                "original_source": job.original_source or "",
+                "last_seen_at": ts,
+            })
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump(jobs_data, f, indent=4, ensure_ascii=False)
+            return job_id, False
+
+        max_id = max((int(item.get("id", 0)) for item in jobs_data if isinstance(item.get("id"), (int, str)) and str(item.get("id")).isdigit()), default=0)
+        job_id = max_id + 1
+
+        new_entry = {
+            "id": job_id,
+            "source": job.source,
+            "source_job_id": source_job_id,
+            "title": job.title,
+            "company": job.company or "",
+            "location": job.location or "",
+            "url": job.url,
+            "canonical_url": canonical_url,
+            "salary": job.salary or "",
+            "job_type": job.job_type or "",
+            "tags_json": tags_json,
+            "is_remote": 1 if job.is_remote else 0,
+            "original_source": job.original_source or "",
+            "content_hash": content_hash,
+            "send_status": "pending",
+            "first_seen_at": ts,
+            "last_seen_at": ts,
+            "is_taken": False
+        }
+        jobs_data.insert(0, new_entry)
+
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(jobs_data, f, indent=4, ensure_ascii=False)
+
+        return job_id, True
+
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
         cur.execute("SELECT id FROM jobs WHERE content_hash = %s", (content_hash,))
         existing = cur.fetchone()
@@ -273,6 +390,21 @@ def upsert_jobs(conn: connection, jobs: list[Job]) -> tuple[int, int]:
 
 
 def get_jobs_for_sending(conn: connection, limit: int = 100) -> list[StoredJob]:
+    if is_json_db_mode():
+        filepath = get_json_db_filepath()
+        if not os.path.exists(filepath):
+            return []
+        with open(filepath, "r", encoding="utf-8") as f:
+            try:
+                jobs_data = json.load(f)
+            except Exception:
+                return []
+        matching = [
+            _row_to_stored_job(row) for row in jobs_data
+            if row.get("send_status") in ('pending', 'retry', 'partial')
+        ]
+        return matching[:limit]
+
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
         cur.execute(
             """
@@ -287,6 +419,8 @@ def get_jobs_for_sending(conn: connection, limit: int = 100) -> list[StoredJob]:
 
 
 def record_topic_send(conn: connection, job_id: int, topic_key: str, success: bool, error: str = "") -> None:
+    if is_json_db_mode():
+        return
     ts = now_utc()
     status = "sent" if success else "failed"
     sent_at = ts if success else None
@@ -306,6 +440,8 @@ def record_topic_send(conn: connection, job_id: int, topic_key: str, success: bo
 
 
 def get_sent_topic_keys(conn: connection, job_id: int) -> set[str]:
+    if is_json_db_mode():
+        return set()
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
         cur.execute("SELECT topic_key FROM job_sends WHERE job_id = %s AND status = 'sent'", (job_id,))
         return {str(row["topic_key"]) for row in cur.fetchall()}
@@ -315,11 +451,30 @@ def set_job_send_status(conn: connection, job_id: int, status: str) -> None:
     allowed = {"pending", "sent", "retry", "partial", "skipped"}
     if status not in allowed:
         raise ValueError(f"Invalid send status: {status}")
+    if is_json_db_mode():
+        filepath = get_json_db_filepath()
+        if not os.path.exists(filepath):
+            return
+        with open(filepath, "r", encoding="utf-8") as f:
+            try:
+                jobs_data = json.load(f)
+            except Exception:
+                return
+        for item in jobs_data:
+            if str(item.get("id")) == str(job_id):
+                item["send_status"] = status
+                break
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(jobs_data, f, indent=4, ensure_ascii=False)
+        return
+
     with conn.cursor() as cur:
         cur.execute("UPDATE jobs SET send_status = %s WHERE id = %s", (status, job_id))
 
 
 def update_source_run(conn: connection, source: str, status: str, error: str = "", last_run_at: Optional[str] = None) -> None:
+    if is_json_db_mode():
+        return
     ts = now_utc()
     with conn.cursor() as cur:
         cur.execute(
@@ -337,6 +492,8 @@ def update_source_run(conn: connection, source: str, status: str, error: str = "
 
 
 def get_source_last_run(conn: connection, source: str) -> Optional[str]:
+    if is_json_db_mode():
+        return None
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
         cur.execute("SELECT last_run_at FROM source_runs WHERE source = %s", (source,))
         row = cur.fetchone()
@@ -345,6 +502,9 @@ def get_source_last_run(conn: connection, source: str) -> Optional[str]:
 
 def estimate_dynamic_limit(conn: connection, days: int = 14, runs_per_day: int = 4, buffer_multiplier: float = 2.0) -> int:
     """Calculate a dynamic job limit based on historical insertion rates."""
+    if is_json_db_mode():
+        return 35
+
     with conn.cursor() as cur:
         cur.execute(
             """
@@ -370,6 +530,17 @@ def estimate_dynamic_limit(conn: connection, days: int = 14, runs_per_day: int =
 
 
 def count_jobs(conn: connection) -> int:
+    if is_json_db_mode():
+        filepath = get_json_db_filepath()
+        if not os.path.exists(filepath):
+            return 0
+        with open(filepath, "r", encoding="utf-8") as f:
+            try:
+                jobs_data = json.load(f)
+                return len(jobs_data)
+            except Exception:
+                return 0
+
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
         cur.execute("SELECT COUNT(*) AS c FROM jobs")
         return int(cur.fetchone()["c"])
@@ -378,27 +549,27 @@ def count_jobs(conn: connection) -> int:
 def _row_to_stored_job(row: dict) -> StoredJob:
     tags = []
     try:
-        loaded = json.loads(row["tags_json"] or "[]")
+        loaded = json.loads(row.get("tags_json") or "[]")
         tags = loaded if isinstance(loaded, list) else []
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, TypeError):
         tags = []
 
     return StoredJob(
         id=int(row["id"]),
-        source=row["source"],
-        source_job_id=row["source_job_id"] or "",
-        title=row["title"],
-        company=row["company"] or "",
-        location=row["location"] or "",
-        url=row["url"],
-        canonical_url=row["canonical_url"],
-        salary=row["salary"] or "",
-        job_type=row["job_type"] or "",
+        source=row.get("source", ""),
+        source_job_id=row.get("source_job_id") or "",
+        title=row.get("title", ""),
+        company=row.get("company") or "",
+        location=row.get("location") or "",
+        url=row.get("url", ""),
+        canonical_url=row.get("canonical_url", ""),
+        salary=row.get("salary") or "",
+        job_type=row.get("job_type") or "",
         tags=tags,
-        is_remote=bool(row["is_remote"]),
-        original_source=row["original_source"] or "",
-        content_hash=row["content_hash"],
-        send_status=row["send_status"],
-        first_seen_at=row["first_seen_at"],
-        last_seen_at=row["last_seen_at"],
+        is_remote=bool(row.get("is_remote", 0)),
+        original_source=row.get("original_source") or "",
+        content_hash=row.get("content_hash", ""),
+        send_status=row.get("send_status", "pending"),
+        first_seen_at=row.get("first_seen_at", ""),
+        last_seen_at=row.get("last_seen_at", ""),
     )
