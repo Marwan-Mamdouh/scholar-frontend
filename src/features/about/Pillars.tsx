@@ -3,13 +3,13 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 export default function Pillars() {
   return (
-    <div className="flex flex-col lg:flex-row-reverse items-center gap-2">
+    <div className="flex flex-col lg:flex-row-reverse items-center gap-6 lg:gap-2">
       <div className="w-full lg:w-1/2">
         <DotLottieReact
           src="https://lottie.host/3918952e-85a9-4a07-9846-0f8fea09beba/8cyikSTHfa.lottie"
           loop
           autoplay
-          className="w-220 h-90 md:h-fit relative -left-1/2 md:-left-1/10 lg:-left-1/4 top-0 "
+          className="relative w-full aspect-[22/9] lg:w-220 lg:h-90 lg:-left-1/4"
         />
       </div>
       <div className="space-y-4 lg:w-[60%]">
