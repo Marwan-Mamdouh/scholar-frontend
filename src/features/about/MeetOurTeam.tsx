@@ -4,6 +4,7 @@ import Button from "@/src/components/ui/Button/Button";
 import CodeIcon from "@iconify-react/tabler/code";
 import BookOutlineIcon from "@iconify-react/basil/book-outline";
 import IndustryIcon from "@iconify-react/cil/industry";
+import AccountGroupIcon from "@iconify-react/mdi/account-group";
 import TeamCard from "./TeamCard";
 import { MeetOurTeamProps } from "./about.type";
 import { ComponentType } from "react";
@@ -33,18 +34,18 @@ export default function MeetOurTeam({ teams }: MeetOurTeamProps) {
         </div>
         <div className="text-center grid grid-cols-2 gap-5">
           <div className="border border-accent-300 rounded-xl p-2.5 bg-linear-to-b from-primary-300/30 to-accent-400/10">
-            <p className="text-[32px] text-neutral-50 font-normal ">
+            <p className="text-3xl sm:text-[32px] text-neutral-50 font-normal ">
               {teams.meta.teamCount}
             </p>
-            <p className="text-2xl text-accent-300 font-normal capitalize">
+            <p className="text-xl sm:text-2xl text-accent-300 font-normal capitalize">
               Teams
             </p>
           </div>
           <div className="border border-accent-300 rounded-xl p-2.5 bg-linear-to-b from-primary-300/30 to-accent-400/10">
-            <p className="text-[32px] text-neutral-50 font-normal ">
+            <p className="text-3xl sm:text-[32px] text-neutral-50 font-normal ">
               {teams.meta.memberCount}
             </p>
-            <p className="text-2xl text-accent-300 font-normal capitalize">
+            <p className="text-xl sm:text-2xl text-accent-300 font-normal capitalize">
               Members
             </p>
           </div>
@@ -64,13 +65,14 @@ export default function MeetOurTeam({ teams }: MeetOurTeamProps) {
       {/* tabs */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 ">
         {teams.data.map((team, index) => {
-          const teamIcon = teamsIcon[index];
+          const teamIcon = teamsIcon[index] ?? AccountGroupIcon;
           return (
             <Accordion
               key={index}
               title={team.title}
               subtitle={`${team.count} members`}
               icon={teamIcon}
+              defaultOpen={false}
             >
               <div className="space-y-4">
                 {team.members.map((member) => (

@@ -1,5 +1,5 @@
 export const getAccordionClasses = (open: boolean) =>
-  `rounded-2xl overflow-hidden transition-all ease-in-out duration-500 px-6 py-4 bg-linear-to-b
+  `rounded-xl overflow-hidden transition-all ease-in-out duration-500 px-6 py-4 bg-linear-to-b
   ${open ? " from-accent-300/30 to-transparent" : "from-accent-300/30 to-transparent h-fit"}`;
 
 export const getHeaderClasses = () =>
