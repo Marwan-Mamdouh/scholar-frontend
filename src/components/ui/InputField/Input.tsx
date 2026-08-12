@@ -1,12 +1,15 @@
 "use client";
 
-import { ComponentRef, forwardRef, useState } from "react";
+import { forwardRef, useState } from "react";
 import { InputProps } from "./input.type";
 import EyeIcon from "@iconify-react/mdi/eye";
 import EyeOffIcon from "@iconify-react/mdi/eye-off";
 import { iconVariants, inputVariants, labelVariants } from "./input.style";
 
-export const Input = forwardRef<ComponentRef<"input">, InputProps>(
+export const Input = forwardRef<
+  HTMLInputElement | HTMLTextAreaElement,
+  InputProps
+>(
   (
     {
       label,
@@ -18,15 +21,17 @@ export const Input = forwardRef<ComponentRef<"input">, InputProps>(
       type,
       size = "md",
       width = "full",
+      multiline = false,
+      rows = 4,
       ...props
     },
     ref,
   ) => {
     const [showPassword, setShowPassword] = useState(false);
 
-    const isPassword = type === "password";
+    const isPassword = !multiline && type === "password";
 
-    const hasRightIcon = Boolean(endAdornment || isPassword);
+    const hasRightIcon = !multiline && Boolean(endAdornment || isPassword);
 
     const hasLabel = Boolean(label);
 
@@ -41,22 +46,41 @@ export const Input = forwardRef<ComponentRef<"input">, InputProps>(
     return (
       <div className="w-full font-main">
         <div className="relative">
-          <input
-            ref={ref}
-            disabled={disabled}
-            type={isPassword ? (showPassword ? "text" : "password") : type}
-            aria-invalid={!!error}
-            aria-disabled={disabled}
-            className={inputVariants({
-              variant,
-              hasRightIcon,
-              hasLabel,
-              size,
-              width,
-              className,
-            })}
-            {...props}
-          />
+          {multiline ? (
+            <textarea
+              ref={ref as React.Ref<HTMLTextAreaElement>}
+              disabled={disabled}
+              rows={rows}
+              aria-invalid={!!error}
+              aria-disabled={disabled}
+              className={inputVariants({
+                variant,
+                hasRightIcon,
+                hasLabel,
+                size,
+                width,
+                className,
+              })}
+              {...(props as React.ComponentPropsWithoutRef<"textarea">)}
+            />
+          ) : (
+            <input
+              ref={ref as React.Ref<HTMLInputElement>}
+              disabled={disabled}
+              type={isPassword ? (showPassword ? "text" : "password") : type}
+              aria-invalid={!!error}
+              aria-disabled={disabled}
+              className={inputVariants({
+                variant,
+                hasRightIcon,
+                hasLabel,
+                size,
+                width,
+                className,
+              })}
+              {...props}
+            />
+          )}
 
           {label && (
             <span className={labelVariants({ variant: variant })}>{label}</span>
