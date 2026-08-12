@@ -31,13 +31,13 @@ const features: Feature[] = [
 
 export default function WhyNexus() {
   return (
-    <div className="flex flex-col lg:flex-row items-center gap-2 ">
+    <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-2">
       <div className="w-full lg:w-1/2">
         <DotLottieReact
           src="https://lottie.host/dfe4cfa0-0e01-4eac-a0c8-753707905f4f/Wn5mxvk8Xd.lottie"
           loop
           autoplay
-          className="w-220 h-90 md:h-fit relative -left-1/2 md:-left-1/10 lg:-left-1/4 top-0 "
+          className="relative w-full aspect-[22/9] lg:w-220 lg:h-90 lg:-left-1/4"
         />
       </div>
       <div className="space-y-4 lg:w-[60%]">
@@ -52,7 +52,7 @@ export default function WhyNexus() {
           </p>
         </div>
         {/* Features */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {features.map((feature, index) => {
             const Icon = feature.icon;
 
