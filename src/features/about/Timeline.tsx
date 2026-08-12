@@ -26,23 +26,23 @@ const timelineData: TimelineItem[] = [
 
 export default function Timeline() {
   return (
-    <div className="max-w-4xl mx-auto ">
+    <div className="max-w-138.75 mx-auto ">
       <div className="relative">
         {/* Vertical line */}
-        <div className="absolute left-[59px] top-5 h-full w-[2px] bg-accent-200" />
+        <div className="absolute left-16.5 top-4 h-full w-0.5 bg-accent-200" />
 
         <div className="space-y-8">
           {timelineData.map((item) => (
             <div key={item.id} className="relative flex gap-8">
               {/* Number + Dot */}
-              <div className="relative min-w-[60px] flex items-start">
+              <div className="relative min-w-15 flex items-start">
                 <span
-                  className={`text-[40px] font-semibold leading-12 ${item.idColor}`}
+                  className={`text-[40px] mx-auto font-semibold leading-12 ${item.idColor}`}
                 >
                   {item.id}
                 </span>
 
-                <div className="absolute right-0 top-2 translate-x-1/2">
+                <div className="absolute left-14 top-3">
                   <div className="w-5 h-5 rounded-full bg-accent-200" />
                 </div>
               </div>
@@ -53,7 +53,7 @@ export default function Timeline() {
                   {item.title}
                 </h3>
 
-                <p className="text-neutral-50 text-lg leading-relaxed max-w-xl">
+                <p className="text-neutral-50 text-lg leading-relaxed max-w-118.75">
                   {item.description}
                 </p>
               </div>
