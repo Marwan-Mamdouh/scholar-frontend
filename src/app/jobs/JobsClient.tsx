@@ -437,27 +437,19 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                       )}
                     </div>
                     
-                    <div className="px-6 py-4 bg-black/20 border-t border-white/5 mt-auto flex gap-2">
+                    <div className="px-6 py-4 bg-black/20 border-t border-white/5 mt-auto">
                       <Button
                         onClick={() => window.open(job.url, '_blank')}
                         intent="accent"
                         variant="outlined"
                         size="md"
-                        className="flex-1 border-white/20 text-white hover:text-accent-200"
+                        className="w-full border-white/20 text-white hover:text-accent-200"
                         iconRight={<ExternalLink className="w-4 h-4" />}
                       >
                         Apply Now
                       </Button>
-                      <Button
-                        onClick={() => handleMarkAsTaken(job.id)}
-                        intent="danger"
-                        variant="outlined"
-                        size="md"
-                        className="flex-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-transparent hover:border-red-500/30"
-                      >
-                        Hide Job
-                      </Button>
                     </div>
+
                   </div>
                 )})}
               </div>

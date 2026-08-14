@@ -10,7 +10,7 @@ import re
 import os
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Iterator, Optional
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
@@ -48,6 +48,7 @@ class StoredJob:
     send_status: str
     first_seen_at: str
     last_seen_at: str
+    last_checked_at: str = ""
 
     def to_job(self) -> Job:
         return Job(
@@ -164,7 +165,8 @@ def init_db(conn: connection) -> None:
                 send_status TEXT NOT NULL DEFAULT 'pending',
                 first_seen_at TEXT NOT NULL,
                 last_seen_at TEXT NOT NULL,
-                is_taken BOOLEAN DEFAULT false
+                is_taken BOOLEAN DEFAULT false,
+                last_checked_at TEXT
             );
 
             CREATE INDEX IF NOT EXISTS idx_jobs_send_status
@@ -197,6 +199,7 @@ def init_db(conn: connection) -> None:
             );
             
             ALTER TABLE jobs ADD COLUMN IF NOT EXISTS is_taken BOOLEAN DEFAULT false;
+            ALTER TABLE jobs ADD COLUMN IF NOT EXISTS last_checked_at TEXT;
         """)
         
         cur.execute(
@@ -268,6 +271,7 @@ def upsert_job(conn: connection, job: Job) -> tuple[int, bool]:
     content_hash = job_content_hash(job)
     source_job_id = str(getattr(job, "source_job_id", "") or "")
     tags_json = json.dumps(job.tags or [], ensure_ascii=False, sort_keys=True)
+    is_job_closed = bool(getattr(job, "is_taken", False))
 
     if is_json_db_mode():
         filepath = get_json_db_filepath()
@@ -287,24 +291,32 @@ def upsert_job(conn: connection, job: Job) -> tuple[int, bool]:
 
         if existing:
             job_id = existing["id"]
-            existing.update({
-                "source": job.source,
-                "source_job_id": source_job_id,
-                "title": job.title,
-                "company": job.company or "",
-                "location": job.location or "",
-                "url": job.url,
-                "canonical_url": canonical_url,
-                "salary": job.salary or "",
-                "job_type": job.job_type or "",
-                "tags_json": tags_json,
-                "is_remote": 1 if job.is_remote else 0,
-                "original_source": job.original_source or "",
-                "last_seen_at": ts,
-            })
+            if is_job_closed:
+                existing["is_taken"] = True
+                existing["last_seen_at"] = ts
+            else:
+                existing.update({
+                    "source": job.source,
+                    "source_job_id": source_job_id,
+                    "title": job.title,
+                    "company": job.company or "",
+                    "location": job.location or "",
+                    "url": job.url,
+                    "canonical_url": canonical_url,
+                    "salary": job.salary or "",
+                    "job_type": job.job_type or "",
+                    "tags_json": tags_json,
+                    "is_remote": 1 if job.is_remote else 0,
+                    "original_source": job.original_source or "",
+                    "last_seen_at": ts,
+                })
             with open(filepath, "w", encoding="utf-8") as f:
                 json.dump(jobs_data, f, indent=4, ensure_ascii=False)
             return job_id, False
+
+        # If job is closed and NOT in DB, do not insert
+        if is_job_closed:
+            return 0, False
 
         max_id = max((int(item.get("id", 0)) for item in jobs_data if isinstance(item.get("id"), (int, str)) and str(item.get("id")).isdigit()), default=0)
         job_id = max_id + 1
@@ -342,21 +354,27 @@ def upsert_job(conn: connection, job: Job) -> tuple[int, bool]:
 
         if existing:
             job_id = existing["id"]
-            cur.execute(
-                """
-                UPDATE jobs
-                SET source = %s, source_job_id = %s, title = %s, company = %s, location = %s,
-                    url = %s, canonical_url = %s, salary = %s, job_type = %s, tags_json = %s,
-                    is_remote = %s, original_source = %s, last_seen_at = %s
-                WHERE id = %s
-                """,
-                (
-                    job.source, source_job_id, job.title, job.company or "", job.location or "",
-                    job.url, canonical_url, job.salary or "", job.job_type or "", tags_json,
-                    1 if job.is_remote else 0, job.original_source or "", ts, job_id
+            if is_job_closed:
+                cur.execute("UPDATE jobs SET is_taken = true, last_seen_at = %s WHERE id = %s", (ts, job_id))
+            else:
+                cur.execute(
+                    """
+                    UPDATE jobs
+                    SET source = %s, source_job_id = %s, title = %s, company = %s, location = %s,
+                        url = %s, canonical_url = %s, salary = %s, job_type = %s, tags_json = %s,
+                        is_remote = %s, original_source = %s, last_seen_at = %s
+                    WHERE id = %s
+                    """,
+                    (
+                        job.source, source_job_id, job.title, job.company or "", job.location or "",
+                        job.url, canonical_url, job.salary or "", job.job_type or "", tags_json,
+                        1 if job.is_remote else 0, job.original_source or "", ts, job_id
+                    )
                 )
-            )
             return job_id, False
+
+        if is_job_closed:
+            return 0, False
 
         cur.execute(
             """
@@ -381,12 +399,137 @@ def upsert_jobs(conn: connection, jobs: list[Job]) -> tuple[int, int]:
     inserted = 0
     refreshed = 0
     for job in jobs:
-        _, is_new = upsert_job(conn, job)
+        job_id, is_new = upsert_job(conn, job)
         if is_new:
             inserted += 1
-        else:
+        elif job_id > 0:
             refreshed += 1
     return inserted, refreshed
+
+
+def get_jobs_due_for_weekly_check(conn: connection, min_age_days: int = 7, max_age_days: int = 14, limit: int = 15) -> list[StoredJob]:
+    """Get active jobs that were last checked/seen ~7 to 14 days ago for a single weekly HTTP verification."""
+    now = datetime.now(UTC)
+    cutoff_min = (now - timedelta(days=min_age_days)).isoformat()
+    cutoff_max = (now - timedelta(days=max_age_days)).isoformat()
+
+    if is_json_db_mode():
+        filepath = get_json_db_filepath()
+        if not os.path.exists(filepath):
+            return []
+        with open(filepath, "r", encoding="utf-8") as f:
+            try:
+                jobs_data = json.load(f)
+            except Exception:
+                return []
+        results = []
+        for row in jobs_data:
+            if row.get("is_taken"):
+                continue
+            last_check = row.get("last_checked_at") or row.get("last_seen_at") or row.get("first_seen_at", "")
+            if cutoff_max <= last_check <= cutoff_min:
+                results.append(_row_to_stored_job(row))
+                if len(results) >= limit:
+                    break
+        return results
+
+    with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+        cur.execute(
+            """
+            SELECT * FROM jobs
+            WHERE (is_taken = false OR is_taken IS NULL)
+              AND COALESCE(last_checked_at, last_seen_at, first_seen_at) <= (NOW() - INTERVAL '%s days')::text
+              AND COALESCE(last_checked_at, last_seen_at, first_seen_at) >= (NOW() - INTERVAL '%s days')::text
+            ORDER BY COALESCE(last_checked_at, last_seen_at) ASC
+            LIMIT %s
+            """,
+            (min_age_days, max_age_days, limit)
+        )
+        return [_row_to_stored_job(row) for row in cur.fetchall()]
+
+
+def mark_job_taken(conn: connection, job_id: int) -> None:
+    """Mark a job as taken/deprecated (hides it from UI)."""
+    ts = now_utc()
+    if is_json_db_mode():
+        filepath = get_json_db_filepath()
+        if not os.path.exists(filepath):
+            return
+        with open(filepath, "r", encoding="utf-8") as f:
+            try:
+                jobs_data = json.load(f)
+            except Exception:
+                return
+        for item in jobs_data:
+            if str(item.get("id")) == str(job_id):
+                item["is_taken"] = True
+                item["last_checked_at"] = ts
+                break
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(jobs_data, f, indent=4, ensure_ascii=False)
+        return
+
+    with conn.cursor() as cur:
+        cur.execute("UPDATE jobs SET is_taken = true, last_checked_at = %s WHERE id = %s", (ts, job_id))
+
+
+def mark_job_checked(conn: connection, job_id: int) -> None:
+    """Update last_checked_at timestamp for a verified active job."""
+    ts = now_utc()
+    if is_json_db_mode():
+        filepath = get_json_db_filepath()
+        if not os.path.exists(filepath):
+            return
+        with open(filepath, "r", encoding="utf-8") as f:
+            try:
+                jobs_data = json.load(f)
+            except Exception:
+                return
+        for item in jobs_data:
+            if str(item.get("id")) == str(job_id):
+                item["last_checked_at"] = ts
+                break
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(jobs_data, f, indent=4, ensure_ascii=False)
+        return
+
+    with conn.cursor() as cur:
+        cur.execute("UPDATE jobs SET last_checked_at = %s WHERE id = %s", (ts, job_id))
+
+
+def purge_jobs_older_than_two_weeks(conn: connection, max_age_days: int = 14) -> int:
+    """Hard-delete jobs that are 2 weeks or older (>= 14 days) from the database/JSON file."""
+    cutoff = (datetime.now(UTC) - timedelta(days=max_age_days)).isoformat()
+
+    if is_json_db_mode():
+        filepath = get_json_db_filepath()
+        if not os.path.exists(filepath):
+            return 0
+        with open(filepath, "r", encoding="utf-8") as f:
+            try:
+                jobs_data = json.load(f)
+            except Exception:
+                return 0
+        original_count = len(jobs_data)
+        retained_jobs = [
+            row for row in jobs_data
+            if (row.get("last_seen_at") or row.get("first_seen_at") or "") > cutoff
+        ]
+        purged_count = original_count - len(retained_jobs)
+        if purged_count > 0:
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump(retained_jobs, f, indent=4, ensure_ascii=False)
+        return purged_count
+
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            DELETE FROM jobs
+            WHERE COALESCE(last_seen_at, first_seen_at) < (NOW() - INTERVAL '%s days')::text
+            """,
+            (max_age_days,)
+        )
+        return cur.rowcount
 
 
 def get_jobs_for_sending(conn: connection, limit: int = 100) -> list[StoredJob]:
@@ -572,4 +715,5 @@ def _row_to_stored_job(row: dict) -> StoredJob:
         send_status=row.get("send_status", "pending"),
         first_seen_at=row.get("first_seen_at", ""),
         last_seen_at=row.get("last_seen_at", ""),
+        last_checked_at=row.get("last_checked_at") or "",
     )

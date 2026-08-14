@@ -2,7 +2,7 @@
 Programming Jobs Telegram Bot — Main entry point.
 
 New runtime flow:
-fetch → filter → persist in SQLite → send pending jobs → record per-topic status.
+fetch → filter → persist → send pending jobs → 1-week expiry check → 2-week auto purge.
 
 Important guarantees:
 - Jobs are stored before sending, so a Telegram failure does not lose them.
@@ -36,6 +36,10 @@ from db import (
     update_source_run,
     upsert_jobs,
     estimate_dynamic_limit,
+    get_jobs_due_for_weekly_check,
+    mark_job_taken,
+    mark_job_checked,
+    purge_jobs_older_than_two_weeks,
 )
 
 # ─── Logging ─────────────────────────────────────────────────
@@ -63,6 +67,7 @@ class RunSummary:
     topic_send_failures: int = 0
     skipped_jobs: int = 0
     total_jobs_in_db: int = 0
+    purged_jobs: int = 0
     seed_mode: bool = False
 
 
@@ -172,8 +177,6 @@ def send_pending_jobs(
 
         results = sender(job, topics_to_send)
 
-        # Defensive: every intended topic must be recorded, even when the sender
-        # returns no key because a Telegram topic is missing from env vars.
         for topic_key in topics_to_send:
             success = bool(results.get(topic_key, False))
             error = "" if success else "send failed or topic not configured"
@@ -205,6 +208,39 @@ def mark_pending_as_skipped(conn, limit: int = MAX_JOBS_PER_RUN) -> int:
         skipped += 1
     conn.commit()
     return skipped
+
+
+def run_weekly_expiry_checks(conn, max_checks: int = 15) -> tuple[int, int]:
+    """Perform 1-week HTTP check on jobs due for weekly verification."""
+    due_jobs = get_jobs_due_for_weekly_check(conn, min_age_days=7, max_age_days=14, limit=max_checks)
+    if not due_jobs:
+        return 0, 0
+
+    log.info(f"🔎 Running 1-week expiry check on {len(due_jobs)} jobs...")
+    try:
+        from linkedin_expiry_checker import check_linkedin_job, RESULT_EXPIRED
+    except ImportError:
+        try:
+            from .linkedin_expiry_checker import check_linkedin_job, RESULT_EXPIRED
+        except ImportError:
+            log.warning("Could not import linkedin_expiry_checker -- skipping 1-week HTTP checks.")
+            return 0, 0
+
+    expired_count = 0
+    active_count = 0
+    for stored in due_jobs:
+        job_identifier = stored.source_job_id or str(stored.id)
+        result = check_linkedin_job(job_identifier)
+        if result == RESULT_EXPIRED:
+            mark_job_taken(conn, stored.id)
+            expired_count += 1
+            log.info(f"  ❌ Job {stored.id} ({stored.title}) is expired -> marked is_taken=true")
+        else:
+            mark_job_checked(conn, stored.id)
+            active_count += 1
+
+    log.info(f"  ✓ 1-week expiry check finished: {expired_count} expired, {active_count} verified active.")
+    return expired_count, active_count
 
 
 def run_bot(
@@ -274,6 +310,21 @@ def run_bot(
                 f"✅ Processed {processed} pending jobs | "
                 f"topic successes={successes}, failures={failures}, skipped={skipped}"
             )
+
+        # 1-Week Targeted Expiry Check (Micro-batch)
+        try:
+            run_weekly_expiry_checks(conn)
+        except Exception as exc:
+            log.warning(f"Weekly expiry check failed (non-critical): {exc}")
+
+        # 2-Week Automatic Hard Removal (>= 14 days old)
+        try:
+            purged = purge_jobs_older_than_two_weeks(conn, max_age_days=14)
+            summary.purged_jobs = purged
+            if purged > 0:
+                log.info(f"🗑️ Auto-removed {purged} jobs older than 2 weeks (>= 14 days).")
+        except Exception as exc:
+            log.warning(f"2-week purge failed (non-critical): {exc}")
 
         summary.total_jobs_in_db = count_jobs(conn)
 

@@ -25,8 +25,9 @@ Environment variables (all optional):
     LINKEDIN_EXPIRY_DELAY      - seconds between requests (default: 5)
     LINKEDIN_EXPIRY_BATCH_SIZE - jobs to check per run   (default: 50)
     LINKEDIN_EXPIRY_MIN_AGE_H  - min age in hours         (default: 6)
-    LINKEDIN_EXPIRY_MAX_AGE_D  - auto-expire after N days (default: 30)
+    LINKEDIN_EXPIRY_MAX_AGE_D  - auto-expire after N days (default: 14)
 """
+
 
 from __future__ import annotations
 
@@ -174,7 +175,7 @@ def run_expiry_check(
     *,
     batch_size: int = 50,
     min_age_hours: int = 6,
-    max_age_days: int = 30,
+    max_age_days: int = 14,
     request_delay: float = 5.0,
     dry_run: bool = False,
 ) -> dict[str, int]:
