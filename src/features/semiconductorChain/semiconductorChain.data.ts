@@ -2,6 +2,11 @@ import { ChainLayer, FlowStep, LayerId } from "./semiconductorChain.type";
 
 export const DEFAULT_LAYER: LayerId = "chip-design";
 
+/** Scroll and focus targets. Kept out of the hook: server components read them,
+ *  and exports of a "use client" module arrive as client references. */
+export const LAYER_DETAIL_ID = "layer-detail";
+export const LAYER_HEADING_ID = "layer-detail-heading";
+
 export const SEMICONDUCTOR_LAYERS: ChainLayer[] = [
   {
     id: "chip-design",
@@ -460,8 +465,21 @@ export const CHAIN_FLOW_STEPS: FlowStep[] = [
   },
 ];
 
-export const getLayerById = (id: LayerId): ChainLayer =>
-  SEMICONDUCTOR_LAYERS.find((layer) => layer.id === id) ?? SEMICONDUCTOR_LAYERS[0];
+export const getLayerById = (id: LayerId): ChainLayer => {
+  const match = SEMICONDUCTOR_LAYERS.find((layer) => layer.id === id);
+
+  if (!match) {
+    // Unreachable for typed callers; a stale id in CHAIN_FLOW_STEPS would
+    // otherwise render the apex under someone else's name, silently.
+    if (process.env.NODE_ENV !== "production") {
+      console.error(`[semiconductorChain] Unknown layer id "${id}" — falling back to the apex.`);
+    }
+
+    return SEMICONDUCTOR_LAYERS[0];
+  }
+
+  return match;
+};
 
 export const isLayerId = (value: unknown): value is LayerId =>
   SEMICONDUCTOR_LAYERS.some((layer) => layer.id === value);

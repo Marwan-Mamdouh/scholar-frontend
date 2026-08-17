@@ -1,5 +1,6 @@
 import { FC } from "react";
 import SemiconductorPyramidClient from "./SemiconductorPyramidClient";
+import LayerScrollAnchor from "./LayerScrollAnchor";
 import LayerInfoCard from "./LayerInfoCard";
 import LayerDetail from "./LayerDetail";
 import ChainFlow from "./ChainFlow";
@@ -12,7 +13,13 @@ const SemiconductorChainContainer: FC<{ activeLayer: LayerId }> = ({ activeLayer
 
   return (
     <div className="w-full max-w-7xl mx-auto flex flex-col gap-12 pt-8 pb-24 px-4 md:px-8 tracking-eyebrow">
+      <LayerScrollAnchor />
+
       <SemiconductorPyramidClient activeLayer={activeLayer} />
+
+      <p className="text-caption text-neutral-300 text-center -mt-6">
+        Ranked by how abstract each layer is — not the order production happens in.
+      </p>
 
       <div className="flex flex-col gap-8">
         <LayerInfoCard layer={layer} />
