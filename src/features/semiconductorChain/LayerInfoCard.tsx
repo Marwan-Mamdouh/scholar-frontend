@@ -2,7 +2,7 @@ import { FC } from "react";
 import LightingGlow from "@/src/components/ui/LightingGlow/LightingGlow";
 import { ChainLayer } from "./semiconductorChain.type";
 import getToneClasses from "./semiconductorChain.style";
-import { countCompanies } from "./semiconductorChain.data";
+import { LAYER_DETAIL_ID, LAYER_HEADING_ID, countCompanies } from "./semiconductorChain.data";
 
 const LayerInfoCard: FC<{ layer: ChainLayer }> = ({ layer }) => {
   const tone = getToneClasses(layer.tone);
@@ -13,7 +13,10 @@ const LayerInfoCard: FC<{ layer: ChainLayer }> = ({ layer }) => {
   ];
 
   return (
-    <div className="relative z-0 w-full rounded-3xl bg-white/10 px-4.5 py-3.5 flex flex-col md:flex-row gap-5">
+    <div
+      id={LAYER_DETAIL_ID}
+      className="relative z-0 w-full rounded-3xl bg-white/10 px-4.5 py-3.5 flex flex-col md:flex-row gap-5"
+    >
       <div className={`w-2 rounded-full ${tone.bg} shrink-0`} />
 
       <div className="hidden lg:block absolute top-[-74%] left-[82%] w-73.5 h-54">
@@ -32,7 +35,15 @@ const LayerInfoCard: FC<{ layer: ChainLayer }> = ({ layer }) => {
               {layer.position}
             </span>
           </div>
-          <h2 className={`text-3xl md:text-2xl font-bold ${tone.softText}`}>{layer.name}</h2>
+          {/* Focus lands here on a layer change, which announces it. No ring:
+              it is out of the tab order. */}
+          <h2
+            id={LAYER_HEADING_ID}
+            tabIndex={-1}
+            className={`text-3xl md:text-2xl font-bold ${tone.softText} focus:outline-none`}
+          >
+            {layer.name}
+          </h2>
           <p className="text-neutral-50 text-lg font-normal">{layer.tagline}</p>
         </div>
 

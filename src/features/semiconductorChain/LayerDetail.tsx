@@ -1,9 +1,13 @@
 import { FC } from "react";
-import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { ChainLayer } from "./semiconductorChain.type";
 import getToneClasses from "./semiconductorChain.style";
 import CompanyCard from "./CompanyCard";
+import LayerLink from "./LayerLink";
+
+/* min-h keeps the buttons from resizing as longer layer names wrap. */
+const navLinkClasses =
+  "group flex min-h-24 flex-1 items-center gap-3 rounded-2xl border border-neutral-600 px-5 py-3.5 transition-colors duration-300 hover:border-neutral-300 hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-300";
 
 interface LayerDetailProps {
   layer: ChainLayer;
@@ -95,10 +99,10 @@ const LayerDetail: FC<LayerDetailProps> = ({ layer, previousLayer, nextLayer }) 
         className="flex flex-col sm:flex-row gap-3 sm:items-stretch sm:justify-between"
       >
         {previousLayer ? (
-          <Link
-            href={`/semiconductor-chain?layer=${previousLayer.id}`}
-            scroll={false}
-            className="group flex flex-1 items-center gap-3 rounded-2xl border border-neutral-600 px-5 py-3.5 transition-colors duration-300 hover:border-neutral-300 hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-300"
+          <LayerLink
+            layer={previousLayer.id}
+            ariaLabel={`Previous layer — layer ${previousLayer.number}: ${previousLayer.name}`}
+            className={navLinkClasses}
           >
             <ArrowLeft className="h-5 w-5 shrink-0 text-neutral-200 transition-transform duration-300 group-hover:-translate-x-1" />
             <span className="flex flex-col">
@@ -107,16 +111,16 @@ const LayerDetail: FC<LayerDetailProps> = ({ layer, previousLayer, nextLayer }) 
               </span>
               <span className="text-neutral-50">{previousLayer.shortName}</span>
             </span>
-          </Link>
+          </LayerLink>
         ) : (
           <span className="hidden sm:block sm:flex-1" />
         )}
 
         {nextLayer ? (
-          <Link
-            href={`/semiconductor-chain?layer=${nextLayer.id}`}
-            scroll={false}
-            className="group flex flex-1 items-center justify-end gap-3 rounded-2xl border border-neutral-600 px-5 py-3.5 text-right transition-colors duration-300 hover:border-neutral-300 hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-300"
+          <LayerLink
+            layer={nextLayer.id}
+            ariaLabel={`Next layer — layer ${nextLayer.number}: ${nextLayer.name}`}
+            className={`${navLinkClasses} justify-end text-right`}
           >
             <span className="flex flex-col">
               <span className="text-xs uppercase tracking-eyebrow text-neutral-300">
@@ -125,7 +129,7 @@ const LayerDetail: FC<LayerDetailProps> = ({ layer, previousLayer, nextLayer }) 
               <span className="text-neutral-50">{nextLayer.shortName}</span>
             </span>
             <ArrowRight className="h-5 w-5 shrink-0 text-neutral-200 transition-transform duration-300 group-hover:translate-x-1" />
-          </Link>
+          </LayerLink>
         ) : (
           <span className="hidden sm:block sm:flex-1" />
         )}
