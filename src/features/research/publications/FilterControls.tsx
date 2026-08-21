@@ -140,42 +140,114 @@ interface RangeFieldProps {
   bound: NumericRange;
   value: RangeValue;
   onChange: (value: RangeValue) => void;
+  step?: number;
   unit?: string;
 }
 
 /**
- * Min/max pair for one numeric dimension. An empty box means "unbounded on that
- * side", so clearing an input sends `undefined` rather than 0.
+ * Two native range inputs stacked on one track. Each is transparent and ignores
+ * pointer events except on its own thumb, so the visible bar below them shows
+ * through and both thumbs stay independently draggable — and each remains a
+ * real slider for the keyboard and for screen readers.
+ */
+const SLIDER =
+  "pointer-events-none absolute inset-x-0 top-0 m-0 h-5 w-full appearance-none bg-transparent focus:outline-none " +
+  "[&::-webkit-slider-runnable-track]:h-5 [&::-webkit-slider-runnable-track]:bg-transparent " +
+  "[&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:size-4 " +
+  "[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full " +
+  "[&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-accent-200 " +
+  "[&::-webkit-slider-thumb]:bg-neutral-800 [&::-webkit-slider-thumb]:cursor-grab " +
+  "[&:focus-visible::-webkit-slider-thumb]:ring-2 [&:focus-visible::-webkit-slider-thumb]:ring-accent-300 " +
+  "[&::-moz-range-track]:h-5 [&::-moz-range-track]:bg-transparent " +
+  "[&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:size-4 " +
+  "[&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:rounded-full " +
+  "[&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-accent-200 " +
+  "[&::-moz-range-thumb]:bg-neutral-800 [&::-moz-range-thumb]:cursor-grab " +
+  "[&:focus-visible::-moz-range-thumb]:ring-2 [&:focus-visible::-moz-range-thumb]:ring-accent-300";
+
+function decimalsOf(step: number): number {
+  return String(step).split(".")[1]?.length ?? 0;
+}
+
+function clamp(value: number, low: number, high: number): number {
+  return Math.min(Math.max(value, low), high);
+}
+
+/**
+ * Min/max pair for one numeric dimension, as a bar with two handles.
+ *
+ * A range input always reports a number inside its bounds, so unlike the text
+ * boxes this replaced there is no part-typed state to guard against. Both edges
+ * are always reported; a pair sitting on the outer bounds reads as "no filter"
+ * through `isRangeActive`, which is what keeps it out of the request payload.
  */
 export function RangeField({
   label,
   bound,
   value,
   onChange,
+  step = 0.1,
   unit,
 }: RangeFieldProps) {
+  const span = bound.max - bound.min;
+  const low = clamp(value.min ?? bound.min, bound.min, bound.max);
+  const high = clamp(value.max ?? bound.max, bound.min, bound.max);
+
+  const round = (raw: number) => Number(raw.toFixed(decimalsOf(step)));
+  const percent = (raw: number) => (span <= 0 ? 0 : ((raw - bound.min) / span) * 100);
+
+  // Neither handle may cross the other.
+  const setLow = (raw: number) =>
+    onChange({ min: round(Math.min(raw, high)), max: round(high) });
+  const setHigh = (raw: number) =>
+    onChange({ min: round(low), max: round(Math.max(raw, low)) });
+
+  // Where the handles meet, only the one painted last can be grabbed. Lifting
+  // the low handle once it passes the midpoint keeps whichever one the pointer
+  // is actually reaching for on top.
+  const lowOnTop = low > bound.min + span / 2;
+  const narrowed = low > bound.min || high < bound.max;
+
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-sm text-neutral-100">{label}</span>
-        <span className="text-xs text-neutral-300">
-          {bound.min}–{bound.max}
+        <span
+          className={`text-xs tabular-nums ${narrowed ? "text-accent-200" : "text-neutral-300"}`}
+        >
+          {low}–{high}
           {unit ? ` ${unit}` : ""}
         </span>
       </div>
-      <div className="flex items-center gap-2">
-        <NumericField
-          value={value.min}
-          onChange={(min) => onChange({ ...value, min })}
-          placeholder={String(bound.min)}
-          ariaLabel={`${label} minimum`}
+
+      <div className="relative h-5">
+        <div className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-neutral-500" />
+        <div
+          className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-accent-400"
+          style={{
+            left: `${percent(low)}%`,
+            right: `${100 - percent(high)}%`,
+          }}
         />
-        <span className="text-neutral-300 text-sm">to</span>
-        <NumericField
-          value={value.max}
-          onChange={(max) => onChange({ ...value, max })}
-          placeholder={String(bound.max)}
-          ariaLabel={`${label} maximum`}
+        <input
+          type="range"
+          min={bound.min}
+          max={bound.max}
+          step={step}
+          value={low}
+          onChange={(event) => setLow(Number(event.target.value))}
+          aria-label={`${label} minimum`}
+          className={`${SLIDER} ${lowOnTop ? "z-20" : "z-10"}`}
+        />
+        <input
+          type="range"
+          min={bound.min}
+          max={bound.max}
+          step={step}
+          value={high}
+          onChange={(event) => setHigh(Number(event.target.value))}
+          aria-label={`${label} maximum`}
+          className={`${SLIDER} ${lowOnTop ? "z-10" : "z-20"}`}
         />
       </div>
     </div>
