@@ -10,18 +10,11 @@ export class ApiError extends Error {
   }
 }
 
-/**
- * The Express backend answers validation failures with
- * `{ status: "error", message: "..." }` and a 4xx code. Anything else that is
- * not JSON (a proxy error page, a crash) is reported by status alone.
- */
 async function readError(response: Response): Promise<string> {
   try {
     const body = (await response.json()) as { message?: string };
     if (body?.message) return body.message;
-  } catch {
-    // fall through to the generic message
-  }
+  } catch {}
   return `Request failed with status ${response.status}`;
 }
 

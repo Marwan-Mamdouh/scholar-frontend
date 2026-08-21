@@ -4,16 +4,12 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 
 interface FilterPillProps {
   label: string;
-  /** How many values are selected — shown in the pill, and drives the active look. */
+
   activeCount?: number;
   onClear?: () => void;
   children: ReactNode;
 }
 
-/**
- * The dropdown trigger the other research tabs use (a bordered pill with a
- * caret), extended with a popover panel and an active state.
- */
 const FilterPill = ({
   label,
   activeCount = 0,

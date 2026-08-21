@@ -1,11 +1,3 @@
-/**
- * Mirrors the `publication` module of scholar-backend (branch `publications/filter`).
- *
- * Note: Prisma `Decimal` columns are serialised as **strings** over the wire
- * (`impactFactor: "5.2"`, `cost: "2195"`), so every decimal is typed as string
- * here and parsed at the edge with `toNumber()`.
- */
-
 export type DecimalString = string;
 
 export type PublicationAccessType =
@@ -86,7 +78,6 @@ export interface PublicationPricing {
   isSubscription: boolean | null;
 }
 
-/** Editorial durations are stored in **days**; the UI shows weeks. */
 export interface PublicationEditorialStat {
   id: number;
   publicationId: number;
@@ -122,7 +113,6 @@ export interface Publication {
   editorialStats: PublicationEditorialStat[];
 }
 
-/** `POST /publication/filter` */
 export interface PublicationFilterResponse {
   publications: Publication[];
 }
@@ -132,7 +122,6 @@ export interface NumericRange {
   max: number;
 }
 
-/** `GET /publication/filter` — the outer bounds every range slider snaps to. */
 export interface PublicationFilterRanges {
   impactFactor: NumericRange;
   sjr: NumericRange;
@@ -146,7 +135,6 @@ export interface RangeValue {
   max?: number;
 }
 
-/** Everything the filter bar can express. `search` is applied client-side. */
 export interface PublicationFilterState {
   search: string;
   categoryIds: number[];

@@ -6,11 +6,6 @@ import type {
   Quartile,
 } from "./publication.type";
 
-/**
- * Prisma exposes enum *keys* over the API (`Full_Open_Access`), while the
- * database stores the display form (`Full Open Access`). These maps turn the
- * keys back into the labels the design calls for — send the key, show the label.
- */
 export const ACCESS_TYPE_LABELS: Record<PublicationAccessType, string> = {
   Hybrid: "Hybrid",
   Full_Open_Access: "Full Open Access",
@@ -52,7 +47,6 @@ export const LICENSE_OPTIONS = Object.keys(LICENSE_LABELS) as LicenseType[];
 
 export const QUARTILE_OPTIONS: Quartile[] = ["Q1", "Q2", "Q3", "Q4"];
 
-/** Only currencies the pricing table actually carries. */
 export const CURRENCY_OPTIONS = ["USD", "EUR", "GBP"];
 
 export const EMPTY_FILTERS: PublicationFilterState = {

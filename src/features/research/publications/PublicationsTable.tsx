@@ -17,7 +17,7 @@ import {
 
 interface PublicationsTableProps {
   publications: Publication[];
-  /** Picks which currency's fee to show when a publication lists several. */
+
   currency?: string;
 }
 
