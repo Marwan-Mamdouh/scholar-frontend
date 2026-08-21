@@ -6,17 +6,9 @@ import {
   fetchPublications,
 } from "./publication.api";
 
-/** Same frame the other research tabs render their content in. */
 export const PANEL_SHELL =
   "w-full bg-transparent border-2 border-accent-200 rounded-b-2xl rounded-tr-2xl p-6 min-h-100 flex flex-col gap-6 relative -mt-px";
 
-/**
- * Server half of the Publications tab: loads the filter reference data and the
- * unfiltered first page, so the table paints with rows instead of a spinner.
- *
- * The filter bar needs the ranges to render at all, so a failed load is shown
- * in place rather than thrown — the rest of the research page stays usable.
- */
 const PublicationsPanel = async () => {
   try {
     const [domains, ranges, publications] = await Promise.all([

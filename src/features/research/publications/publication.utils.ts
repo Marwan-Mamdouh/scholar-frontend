@@ -6,17 +6,12 @@ import type {
   PublicationYearlyMetric,
 } from "./publication.type";
 
-/** Prisma decimals arrive as strings; `null` and unparseable values collapse to null. */
 export function toNumber(value: DecimalString | null | undefined): number | null {
   if (value === null || value === undefined || value === "") return null;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-/**
- * `POST /filter` already returns only the newest metric row, but `/all` returns
- * every year, so pick the newest rather than trusting the array order.
- */
 export function latestMetric(
   publication: Publication,
 ): PublicationYearlyMetric | null {
@@ -33,10 +28,6 @@ export function editorialStat(
   return publication.editorialStats?.[0] ?? null;
 }
 
-/**
- * A publication can carry the same year's fee in several currencies, so prefer
- * the one the price filter is set to, then the newest year.
- */
 export function primaryPricing(
   publication: Publication,
   preferredCurrency?: string,
@@ -54,7 +45,6 @@ export function primaryPricing(
   );
 }
 
-/** Editorial durations are stored in days; every surface shows weeks. */
 export function daysToWeeks(days: DecimalString | null): number | null {
   const parsed = toNumber(days);
   return parsed === null ? null : Math.round((parsed / 7) * 10) / 10;
@@ -72,7 +62,6 @@ export function formatCost(pricing: PricingLike | null): string {
       maximumFractionDigits: 0,
     }).format(cost);
   } catch {
-    // An unexpected currency code would make Intl throw; show the raw figure.
     return `${cost.toLocaleString("en-US")} ${pricing.currency}`;
   }
 }
@@ -86,10 +75,6 @@ export function formatNumber(value: number | null, suffix = ""): string {
   return value === null ? "—" : `${value}${suffix}`;
 }
 
-/**
- * The filter endpoint has no title/keyword field, so free-text search runs on
- * the client over the rows the server returned.
- */
 export function matchesSearch(publication: Publication, query: string): boolean {
   const term = query.trim().toLowerCase();
   if (!term) return true;

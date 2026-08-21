@@ -40,13 +40,9 @@ const PublicationsExplorer = ({
   const [error, setError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
-  // Only the server-side half of the filter state should trigger a request;
-  // `search` is applied locally, so keying off the payload keeps typing cheap.
   const payload = buildFilterPayload(filters, ranges);
   const payloadKey = JSON.stringify(payload);
 
-  // Key of the payload the rows in state were fetched with. Guards the initial
-  // server-rendered data and React's double-invoked effects in development.
   const loadedKeyRef = useRef(payloadKey);
 
   useEffect(() => {

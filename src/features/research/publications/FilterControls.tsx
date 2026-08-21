@@ -49,17 +49,12 @@ export function OptionList<T extends string | number>({
   );
 }
 
-/** Digits on the way to being a number, including part-typed ones: "", "-", "1.", "1e". */
 const NUMERIC_DRAFT = /^[-+]?\d*(?:\.\d*)?(?:[eE][-+]?\d*)?$/;
 
 function toText(value: number | undefined): string {
   return value === undefined ? "" : String(value);
 }
 
-/**
- * `undefined` for an empty box (means unbounded), a number when the text is one,
- * and `null` while it is still being typed ("-", "1e") and has no numeric value.
- */
 function parseDraft(raw: string): number | undefined | null {
   if (raw === "") return undefined;
   const parsed = Number(raw);
@@ -76,23 +71,6 @@ interface NumericFieldProps {
   ariaLabel: string;
 }
 
-/**
- * One optional number, backed by its own text so what is typed is what is shown.
- *
- * This is deliberately `type="text"` with `inputMode="decimal"` rather than
- * `type="number"`. A number input runs the HTML value-sanitisation algorithm,
- * which reports every part-typed value ("1.", "-", "5e") as `""` — so a parent
- * holding the parsed number cannot tell "still typing" from "box cleared", and
- * ends up echoing an empty string back into a box that visibly reads "1.".
- * Rewriting a number input's value while it holds unparseable text makes WebKit
- * re-fire `input`; combined with a parent that built a fresh object on every
- * change (so React could never bail out of the re-render), the two fed each
- * other and hung the page in Safari.
- *
- * Owning the text fixes both halves: the value written back is always the value
- * typed, and a part-typed box reports nothing upward, so "12." no longer clears
- * the filter and refetches the whole list between keystrokes.
- */
 export function NumericField({
   value,
   onChange,
@@ -102,9 +80,6 @@ export function NumericField({
   const [draft, setDraft] = useState(() => toText(value));
   const [synced, setSynced] = useState(value);
 
-  // Re-sync when the value is changed from outside — "Clear" or "Clear all".
-  // Text that already parses to the incoming number is left alone, so an
-  // in-progress "12." is not rewritten to "12" between keystrokes.
   if (value !== synced) {
     setSynced(value);
     if (parseDraft(draft) !== value) setDraft(toText(value));
@@ -123,8 +98,7 @@ export function NumericField({
         setDraft(raw);
 
         const parsed = parseDraft(raw);
-        // Still mid-number, or the same value the parent already holds — either
-        // way there is nothing new to report, and no re-render to provoke.
+
         if (parsed === null || parsed === value) return;
         onChange(parsed);
       }}
@@ -144,12 +118,6 @@ interface RangeFieldProps {
   unit?: string;
 }
 
-/**
- * Two native range inputs stacked on one track. Each is transparent and ignores
- * pointer events except on its own thumb, so the visible bar below them shows
- * through and both thumbs stay independently draggable — and each remains a
- * real slider for the keyboard and for screen readers.
- */
 const SLIDER =
   "pointer-events-none absolute inset-x-0 top-0 m-0 h-5 w-full appearance-none bg-transparent focus:outline-none " +
   "[&::-webkit-slider-runnable-track]:h-5 [&::-webkit-slider-runnable-track]:bg-transparent " +
@@ -173,14 +141,6 @@ function clamp(value: number, low: number, high: number): number {
   return Math.min(Math.max(value, low), high);
 }
 
-/**
- * Min/max pair for one numeric dimension, as a bar with two handles.
- *
- * A range input always reports a number inside its bounds, so unlike the text
- * boxes this replaced there is no part-typed state to guard against. Both edges
- * are always reported; a pair sitting on the outer bounds reads as "no filter"
- * through `isRangeActive`, which is what keeps it out of the request payload.
- */
 export function RangeField({
   label,
   bound,
@@ -196,15 +156,11 @@ export function RangeField({
   const round = (raw: number) => Number(raw.toFixed(decimalsOf(step)));
   const percent = (raw: number) => (span <= 0 ? 0 : ((raw - bound.min) / span) * 100);
 
-  // Neither handle may cross the other.
   const setLow = (raw: number) =>
     onChange({ min: round(Math.min(raw, high)), max: round(high) });
   const setHigh = (raw: number) =>
     onChange({ min: round(low), max: round(Math.max(raw, low)) });
 
-  // Where the handles meet, only the one painted last can be grabbed. Lifting
-  // the low handle once it passes the midpoint keeps whichever one the pointer
-  // is actually reaching for on top.
   const lowOnTop = low > bound.min + span / 2;
   const narrowed = low > bound.min || high < bound.max;
 

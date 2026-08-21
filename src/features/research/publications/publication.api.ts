@@ -9,10 +9,6 @@ import type {
   RangeValue,
 } from "./publication.type";
 
-/**
- * The shape `POST /publication/filter` validates against. Every section is
- * optional, and that matters — see `buildFilterPayload`.
- */
 interface PublicationFilterPayload {
   categories?: { categoryIds: number[] };
   publishingModel?: string[];
@@ -30,11 +26,6 @@ interface PublicationFilterPayload {
   };
 }
 
-/**
- * A range only filters once it narrows the bounds the API reported. Sending a
- * full-width range would still be a real filter server-side (see below), so a
- * slider dragged out to its ends must read as "off".
- */
 export function isRangeActive(
   value: RangeValue,
   bound?: NumericRange,
@@ -54,16 +45,6 @@ function activeRange(
   return isRangeActive(value, bound) ? value : undefined;
 }
 
-/**
- * Builds the request body **sparsely**, and that is load-bearing.
- *
- * The backend turns a present `metrics` / `editorialSpeed` / `pricing` section
- * into a Prisma `some:` clause on the matching relation. An empty-but-present
- * section therefore still means "must have at least one metrics row", silently
- * dropping publications that have none. Sending `{}` returns all 17 seeded
- * publications; sending `{ metrics: {} }` returns 16. So each section is
- * included only when something inside it is actually set.
- */
 export function buildFilterPayload(
   filters: PublicationFilterState,
   ranges?: PublicationFilterRanges,
@@ -134,7 +115,6 @@ export async function fetchPublications(
   return data.publications ?? [];
 }
 
-/** Reference data for the filter bar. Changes rarely, so it is worth caching. */
 export function fetchFilterRanges(): Promise<PublicationFilterRanges> {
   return apiGet<PublicationFilterRanges>("/publication/filter", {
     next: { revalidate: 300 },

@@ -30,7 +30,6 @@ interface PublicationFilterBarProps {
   ranges: PublicationFilterRanges;
 }
 
-/** Adds or removes one value from a multi-select array. */
 function toggle<T>(values: T[], value: T): T[] {
   return values.includes(value)
     ? values.filter((item) => item !== value)
