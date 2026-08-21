@@ -50,10 +50,10 @@ const FilterPill = ({
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
-        className={`px-4 py-2 rounded-full border text-sm flex items-center gap-2 cursor-pointer transition-colors duration-300 ${
+        className={`px-4 py-2 rounded-full border text-sm flex items-center gap-2 cursor-pointer ${
           isActive
             ? "border-accent-400 text-accent-200 bg-accent-400/10"
-            : "border-neutral-400 text-neutral-300 hover:border-neutral-300"
+            : "border-neutral-400 text-neutral-300"
         }`}
       >
         {label}
@@ -68,7 +68,7 @@ const FilterPill = ({
       {open && (
         <div
           id={panelId}
-          className="absolute left-0 top-full mt-2 z-30 w-70 rounded-2xl border border-neutral-400 bg-neutral-800 p-4 shadow-[0_8px_30px_rgba(0,0,0,0.45)]"
+          className="absolute left-0 top-full mt-2 z-30 w-70 rounded-2xl border border-neutral-400 bg-neutral-800 p-4"
         >
           <div className="flex items-center justify-between gap-2 mb-3">
             <span className="text-sm font-semibold text-neutral-50">
