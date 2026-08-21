@@ -9,6 +9,7 @@ interface ResearchTabsProps {
 const tabs: { id: TabType; label: string }[] = [
   { id: "researchers", label: "Researchers" },
   { id: "papers", label: "Papers" },
+  { id: "publications", label: "Publications" },
   { id: "projects", label: "Projects" },
 ];
 

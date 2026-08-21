@@ -9,7 +9,9 @@ export default async function ResearchPage(
   const searchParams = await props.searchParams;
   const tab = searchParams?.tab;
   const activeTab: TabType =
-    tab === "papers" || tab === "projects" ? tab : "researchers";
+    tab === "papers" || tab === "publications" || tab === "projects"
+      ? tab
+      : "researchers";
 
   return (
     <main className="flex-1 w-full flex flex-col items-end relative overflow-hidden pt-10 font-main">
