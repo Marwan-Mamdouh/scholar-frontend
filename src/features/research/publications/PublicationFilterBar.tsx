@@ -187,6 +187,7 @@ const PublicationFilterBar = ({
                 bound={ranges.sjr}
                 value={filters.sjr}
                 onChange={(value) => update("sjr", value)}
+                step={0.01}
               />
             </div>
           </FilterPill>
@@ -204,6 +205,7 @@ const PublicationFilterBar = ({
                 bound={ranges.firstDecisionWeeks}
                 value={filters.firstDecisionWeeks}
                 onChange={(value) => update("firstDecisionWeeks", value)}
+                step={0.5}
                 unit="wks"
               />
               <RangeField
@@ -213,6 +215,7 @@ const PublicationFilterBar = ({
                 onChange={(value) =>
                   update("submissionToAcceptanceWeeks", value)
                 }
+                step={0.5}
                 unit="wks"
               />
             </div>
