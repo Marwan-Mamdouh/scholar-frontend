@@ -2,7 +2,7 @@
 
 import { Input } from "@/src/components/ui/InputField/Input";
 import FilterPill from "./FilterPill";
-import { OptionList, RangeField } from "./FilterControls";
+import { NumericField, OptionList, RangeField } from "./FilterControls";
 import { isRangeActive } from "./publication.api";
 import {
   ACCESS_TYPE_LABELS,
@@ -187,7 +187,6 @@ const PublicationFilterBar = ({
                 bound={ranges.sjr}
                 value={filters.sjr}
                 onChange={(value) => update("sjr", value)}
-                step={0.01}
               />
             </div>
           </FilterPill>
@@ -205,7 +204,6 @@ const PublicationFilterBar = ({
                 bound={ranges.firstDecisionWeeks}
                 value={filters.firstDecisionWeeks}
                 onChange={(value) => update("firstDecisionWeeks", value)}
-                step={0.5}
                 unit="wks"
               />
               <RangeField
@@ -215,7 +213,6 @@ const PublicationFilterBar = ({
                 onChange={(value) =>
                   update("submissionToAcceptanceWeeks", value)
                 }
-                step={0.5}
                 unit="wks"
               />
             </div>
@@ -246,22 +243,11 @@ const PublicationFilterBar = ({
                 <span className="text-sm text-neutral-100">
                   Max article fee (APC)
                 </span>
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  min={0}
-                  step={50}
-                  value={filters.maxCost ?? ""}
-                  onChange={(event) =>
-                    update(
-                      "maxCost",
-                      event.target.value === ""
-                        ? undefined
-                        : Number(event.target.value),
-                    )
-                  }
+                <NumericField
+                  value={filters.maxCost}
+                  onChange={(maxCost) => update("maxCost", maxCost)}
                   placeholder="Any"
-                  className="rounded-lg border border-neutral-400 bg-transparent px-2.5 py-1.5 text-sm text-neutral-50 outline-none focus:border-accent-400"
+                  ariaLabel="Maximum article fee"
                 />
               </label>
             </div>
