@@ -6,7 +6,9 @@ import type {
   PublicationYearlyMetric,
 } from "./publication.type";
 
-export function toNumber(value: DecimalString | null | undefined): number | null {
+export function toNumber(
+  value: DecimalString | null | undefined,
+): number | null {
   if (value === null || value === undefined || value === "") return null;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
@@ -75,7 +77,15 @@ export function formatNumber(value: number | null, suffix = ""): string {
   return value === null ? "—" : `${value}${suffix}`;
 }
 
-export function matchesSearch(publication: Publication, query: string): boolean {
+/**
+ * @deprecated Backend now handles text search via the `/publication/search`
+ * endpoint (`q` param). Keep this only as a fallback until backend search is
+ * verified working; do not use it for new filtering logic.
+ */
+export function matchesSearch(
+  publication: Publication,
+  query: string,
+): boolean {
   const term = query.trim().toLowerCase();
   if (!term) return true;
 
