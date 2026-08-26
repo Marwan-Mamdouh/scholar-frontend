@@ -114,7 +114,13 @@ export interface Publication {
 }
 
 export interface PublicationFilterResponse {
-  publications: Publication[];
+  data: Publication[];
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
 }
 
 export interface NumericRange {

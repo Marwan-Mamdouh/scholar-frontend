@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { NumericRange, RangeValue } from "./publication.type";
 
 interface OptionListProps<T extends string | number> {
@@ -78,12 +78,10 @@ export function NumericField({
   ariaLabel,
 }: NumericFieldProps) {
   const [draft, setDraft] = useState(() => toText(value));
-  const [synced, setSynced] = useState(value);
 
-  if (value !== synced) {
-    setSynced(value);
-    if (parseDraft(draft) !== value) setDraft(toText(value));
-  }
+  useEffect(() => {
+    setDraft(toText(value));
+  }, [value]);
 
   return (
     <input

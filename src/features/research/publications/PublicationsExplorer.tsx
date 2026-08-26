@@ -4,10 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
 import notFoundAnimation from "@/src/components/assets/NotFound.json";
-import { apiPost } from "@/src/lib/api-client";
+import { apiGet } from "@/src/lib/api-client";
+import { useDebouncedValue } from "@/src/hooks/useDebouncedValue";
 import PublicationFilterBar from "./PublicationFilterBar";
 import PublicationsTable from "./PublicationsTable";
-import { buildFilterPayload } from "./publication.api";
+import { buildSearchParams } from "./publication.api";
 import { EMPTY_FILTERS } from "./publication.constants";
 import type {
   Publication,
@@ -16,7 +17,6 @@ import type {
   PublicationFilterResponse,
   PublicationFilterState,
 } from "./publication.type";
-import { matchesSearch } from "./publication.utils";
 
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
@@ -40,26 +40,28 @@ const PublicationsExplorer = ({
   const [error, setError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
-  const payload = buildFilterPayload(filters, ranges);
-  const payloadKey = JSON.stringify(payload);
+  const debouncedSearch = useDebouncedValue(filters.search, 300);
 
-  const loadedKeyRef = useRef(payloadKey);
+  const queryKey = buildSearchParams(
+    { ...filters, search: debouncedSearch },
+    ranges,
+  ).toString();
+
+  const loadedKeyRef = useRef(queryKey);
 
   useEffect(() => {
-    if (loadedKeyRef.current === payloadKey && reloadToken === 0) return;
+    if (loadedKeyRef.current === queryKey && reloadToken === 0) return;
 
     const controller = new AbortController();
     setStatus("loading");
     setError(null);
 
-    apiPost<PublicationFilterResponse>(
-      "/publication/filter",
-      JSON.parse(payloadKey),
-      { signal: controller.signal },
-    )
+    apiGet<PublicationFilterResponse>(`/publication/search?${queryKey}`, {
+      signal: controller.signal,
+    })
       .then((data) => {
-        loadedKeyRef.current = payloadKey;
-        setPublications(data.publications ?? []);
+        loadedKeyRef.current = queryKey;
+        setPublications(data.data ?? []);
         setStatus("idle");
       })
       .catch((cause: unknown) => {
@@ -73,11 +75,9 @@ const PublicationsExplorer = ({
       });
 
     return () => controller.abort();
-  }, [payloadKey, reloadToken]);
+  }, [queryKey, reloadToken]);
 
-  const visible = publications.filter((publication) =>
-    matchesSearch(publication, filters.search),
-  );
+  const visible = publications;
 
   return (
     <div className="flex flex-col gap-6">
@@ -134,7 +134,10 @@ const PublicationsExplorer = ({
         <div
           className={`transition-opacity duration-300 ${status === "loading" ? "opacity-60" : "opacity-100"}`}
         >
-          <PublicationsTable publications={visible} currency={filters.currency} />
+          <PublicationsTable
+            publications={visible}
+            currency={filters.currency}
+          />
         </div>
       )}
     </div>

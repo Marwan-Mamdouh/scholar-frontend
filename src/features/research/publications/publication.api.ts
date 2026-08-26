@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from "@/src/lib/api-client";
+import { apiGet } from "@/src/lib/api-client";
 import type {
   NumericRange,
   Publication,
@@ -8,23 +8,6 @@ import type {
   PublicationFilterState,
   RangeValue,
 } from "./publication.type";
-
-interface PublicationFilterPayload {
-  categories?: { categoryIds: number[] };
-  publishingModel?: string[];
-  licensing?: string[];
-  pricing?: { currency?: string; maxCost?: number };
-  metrics?: {
-    quartiles?: string[];
-    impactFactor?: RangeValue;
-    sjr?: RangeValue;
-    citeScore?: RangeValue;
-  };
-  editorialSpeed?: {
-    firstDecisionWeeks?: RangeValue;
-    submissionToAcceptanceWeeks?: RangeValue;
-  };
-}
 
 export function isRangeActive(
   value: RangeValue,
@@ -45,61 +28,72 @@ function activeRange(
   return isRangeActive(value, bound) ? value : undefined;
 }
 
-export function buildFilterPayload(
+function appendRange(
+  params: URLSearchParams,
+  prefix: string,
+  value: RangeValue | undefined,
+): void {
+  if (!value) return;
+  if (value.min !== undefined) params.set(`${prefix}Min`, String(value.min));
+  if (value.max !== undefined) params.set(`${prefix}Max`, String(value.max));
+}
+
+export function buildSearchParams(
   filters: PublicationFilterState,
   ranges?: PublicationFilterRanges,
-): PublicationFilterPayload {
-  const payload: PublicationFilterPayload = {};
+): URLSearchParams {
+  const params = new URLSearchParams();
+
+  const query = filters.search.trim();
+  if (query) params.set("q", query);
 
   if (filters.categoryIds.length) {
-    payload.categories = { categoryIds: filters.categoryIds };
+    params.set("categoryIds", filters.categoryIds.join(","));
   }
 
   if (filters.publishingModel.length) {
-    payload.publishingModel = filters.publishingModel;
+    params.set("publishingModel", filters.publishingModel.join(","));
   }
 
   if (filters.licensing.length) {
-    payload.licensing = filters.licensing;
+    params.set("licensing", filters.licensing.join(","));
+  }
+
+  if (filters.quartiles.length) {
+    params.set("quartiles", filters.quartiles.join(","));
   }
 
   if (filters.maxCost !== undefined) {
-    payload.pricing = {
-      currency: filters.currency || undefined,
-      maxCost: filters.maxCost,
-    };
+    params.set("currency", filters.currency);
+    params.set("maxCost", String(filters.maxCost));
   }
 
-  const impactFactor = activeRange(filters.impactFactor, ranges?.impactFactor);
-  const sjr = activeRange(filters.sjr, ranges?.sjr);
-  const citeScore = activeRange(filters.citeScore, ranges?.citeScore);
-
-  if (filters.quartiles.length || impactFactor || sjr || citeScore) {
-    payload.metrics = {
-      ...(filters.quartiles.length && { quartiles: filters.quartiles }),
-      ...(impactFactor && { impactFactor }),
-      ...(sjr && { sjr }),
-      ...(citeScore && { citeScore }),
-    };
-  }
-
-  const firstDecisionWeeks = activeRange(
-    filters.firstDecisionWeeks,
-    ranges?.firstDecisionWeeks,
+  appendRange(
+    params,
+    "impactFactor",
+    activeRange(filters.impactFactor, ranges?.impactFactor),
   );
-  const submissionToAcceptanceWeeks = activeRange(
-    filters.submissionToAcceptanceWeeks,
-    ranges?.submissionToAcceptanceWeeks,
+  appendRange(params, "sjr", activeRange(filters.sjr, ranges?.sjr));
+  appendRange(
+    params,
+    "citeScore",
+    activeRange(filters.citeScore, ranges?.citeScore),
+  );
+  appendRange(
+    params,
+    "firstDecisionWeeks",
+    activeRange(filters.firstDecisionWeeks, ranges?.firstDecisionWeeks),
+  );
+  appendRange(
+    params,
+    "submissionToAcceptanceWeeks",
+    activeRange(
+      filters.submissionToAcceptanceWeeks,
+      ranges?.submissionToAcceptanceWeeks,
+    ),
   );
 
-  if (firstDecisionWeeks || submissionToAcceptanceWeeks) {
-    payload.editorialSpeed = {
-      ...(firstDecisionWeeks && { firstDecisionWeeks }),
-      ...(submissionToAcceptanceWeeks && { submissionToAcceptanceWeeks }),
-    };
-  }
-
-  return payload;
+  return params;
 }
 
 export async function fetchPublications(
@@ -107,12 +101,12 @@ export async function fetchPublications(
   ranges?: PublicationFilterRanges,
   init?: RequestInit,
 ): Promise<Publication[]> {
-  const data = await apiPost<PublicationFilterResponse>(
-    "/publication/filter",
-    buildFilterPayload(filters, ranges),
+  const params = buildSearchParams(filters, ranges);
+  const { data } = await apiGet<PublicationFilterResponse>(
+    `/publication/search?${params.toString()}`,
     init,
   );
-  return data.publications ?? [];
+  return data ?? [];
 }
 
 export function fetchFilterRanges(): Promise<PublicationFilterRanges> {

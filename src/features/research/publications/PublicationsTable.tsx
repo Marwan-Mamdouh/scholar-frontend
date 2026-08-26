@@ -29,7 +29,7 @@ const QUARTILE_STYLES: Record<Quartile, string> = {
 };
 
 const COLUMNS = [
-  { key: "publication", label: "Publication", align: "left" },
+  { key: "publication", label: "Journal name", align: "left" },
   { key: "category", label: "Category", align: "left" },
   { key: "type", label: "Type", align: "left" },
   { key: "access", label: "Access", align: "left" },
