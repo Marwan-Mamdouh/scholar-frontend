@@ -13,4 +13,6 @@ export type InputProps = Omit<
   containerClassName?: string;
   size?: InputSize;
   width?: InputWidth;
+  multiline?: boolean;
+  rows?: number;
 };
