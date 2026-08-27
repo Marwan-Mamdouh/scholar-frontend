@@ -15,7 +15,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `npm run dev` — dev server at http://localhost:3000
 - `npm run build` — production build (also type-checks via Next)
 - `npm run lint` — ESLint (flat config in `eslint.config.mjs`)
-- **No test suite and no `typecheck` script exist.** For a standalone type check use `npx tsc --noEmit`.
+- **No test suite, no `typecheck` script, and no CI workflows exist.** For a standalone type check use `npx tsc --noEmit`.
 
 ## Backend dependency (corrects stale README)
 - Data features call a **separate backend** through `NEXT_PUBLIC_API_URL` (default `http://localhost:4000/api`) — see `src/lib/api-client.ts`. Set this in `.env` for live data.
@@ -25,7 +25,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 ## Code layout conventions (observed in `src/`)
 - **Feature-Sliced Design.** Domain code lives in `src/features/<domain>/` and is imported through that folder's `index.ts` barrel (e.g. `import { X } from "@/src/features/home"`). Keep `src/app/` pages thin: compose feature components, no business/data logic.
 - **Import alias quirk:** `tsconfig` maps `@/*` to repo root, and the codebase imports via the `@/src/...` prefix (e.g. `@/src/features/...`, `@/src/components/...`). Match this in new code — not bare `@/features`.
-- `src/components/ui/` holds shared dumb UI primitives (Button, Card, Badge, Input, Accordion…). Domain-specific components go under `src/features/<domain>/components/`.
+- `src/components/ui/` holds shared dumb UI primitives (Button, Card, Badge, Input, Accordion…). Domain-specific components go under `src/features/<domain>/components/`. (Exception: `src/components/auth/AuthShell.tsx` exists — match existing placement when editing auth layout.)
 - `src/lib/api-client.ts` is the single `fetch`-based wrapper (`apiGet`/`apiPost`). Feature API code lives in `src/features/<domain>/.../*.api.ts` and uses it.
 
 ## Branch / PR conventions (from README)
