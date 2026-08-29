@@ -195,8 +195,8 @@ def parse_linkedin_html(
     seen_urls: set[str] = set()
 
     for card in cards:
-        if _is_closed_or_inactive_card(card):
-            continue
+        is_closed = _is_closed_or_inactive_card(card)
+
         if max_age_seconds is not None and _card_is_older_than(card, max_age_seconds):
             continue
 
@@ -226,11 +226,13 @@ def parse_linkedin_html(
             job_type=job_type,
             tags=tags,
             is_remote=is_remote,
+            is_taken=is_closed,
         )
         setattr(job, "source_job_id", extract_linkedin_job_id(url))
         jobs.append(job)
 
     return jobs
+
 
 
 def _extract_cards(page_html: str) -> list[str]:

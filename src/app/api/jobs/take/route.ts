@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@vercel/postgres';
+import { markJobAsTaken } from '@/src/lib/jobsDb';
 
 export async function POST(request: Request) {
   try {
@@ -8,9 +8,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Job ID is required' }, { status: 400 });
     }
 
-    await sql`UPDATE jobs SET is_taken = true WHERE id = ${id}`;
+    const result = await markJobAsTaken(id);
 
-    return NextResponse.json({ success: true, message: 'Job marked as taken' });
+    return NextResponse.json(result);
   } catch (error: any) {
     console.error('Error updating job:', error);
     return NextResponse.json(
@@ -19,3 +19,4 @@ export async function POST(request: Request) {
     );
   }
 }
+

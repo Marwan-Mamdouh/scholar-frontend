@@ -32,3 +32,10 @@ jobs:
         run: |
           cd scripts/bot
           python main.py
+
+      - name: Check LinkedIn Job Availability
+        env:
+          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+        run: |
+          cd scripts/bot
+          python linkedin_expiry_checker.py

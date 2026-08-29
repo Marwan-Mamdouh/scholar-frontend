@@ -37,6 +37,7 @@ class Job:
     tags: list = field(default_factory=list)
     is_remote: bool = False
     original_source: str = ""  # for aggregators like JSearch
+    is_taken: bool = False
 
     @property
     def unique_id(self) -> str:

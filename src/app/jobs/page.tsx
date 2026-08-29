@@ -1,19 +1,19 @@
-import { sql } from '@vercel/postgres';
+import { getJobs } from '@/src/lib/jobsDb';
 import JobsClient from './JobsClient';
 
-export const revalidate = 0; // Disable static caching so it always fetches from Postgres
+export const revalidate = 0; // Disable static caching so it always fetches fresh data
 
 export default async function JobsPage() {
   let initialJobs: any[] = [];
   let errorMsg: string | undefined = undefined;
 
   try {
-    const { rows } = await sql`SELECT * FROM jobs WHERE is_taken = false OR is_taken IS NULL ORDER BY first_seen_at DESC`;
-    initialJobs = rows;
+    initialJobs = await getJobs();
   } catch (error: any) {
-    console.error("Vercel Postgres Error:", error);
-    errorMsg = error.message || "Failed to connect to database";
+    console.error("Jobs Fetch Error:", error);
+    errorMsg = error.message || "Failed to fetch jobs";
   }
 
   return <JobsClient initialJobs={initialJobs} serverError={errorMsg} />;
 }
+
