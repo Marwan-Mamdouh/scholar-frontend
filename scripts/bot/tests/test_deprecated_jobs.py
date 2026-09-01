@@ -14,7 +14,6 @@ from db import (
     purge_jobs_older_than_two_weeks,
     get_jobs_due_for_weekly_check,
     mark_job_taken,
-    mark_job_checked,
 )
 
 class TestDeprecatedJobs(unittest.TestCase):
@@ -170,6 +169,135 @@ class TestDeprecatedJobs(unittest.TestCase):
             remaining = json.load(f)
             self.assertEqual(len(remaining), 1)
             self.assertEqual(remaining[0]["id"], 1)
+
+    def test_get_linkedin_jobs_to_check_filters_by_age_and_source(self):
+        now = datetime.now(UTC)
+        eligible_first_seen = (now - timedelta(hours=8)).isoformat()
+        too_new_seen = (now - timedelta(hours=1)).isoformat()
+        stale_seen = (now - timedelta(days=20)).isoformat()
+
+        with open(self.test_file, "w", encoding="utf-8") as f:
+            json.dump(
+                [
+                    {
+                        "id": 1,
+                        "source": "linkedin",
+                        "source_job_id": "111",
+                        "title": "Eligible Job",
+                        "company": "Acme",
+                        "location": "Cairo",
+                        "url": "https://linkedin.com/jobs/view/111",
+                        "canonical_url": "https://linkedin.com/jobs/view/111",
+                        "content_hash": "h1",
+                        "send_status": "pending",
+                        "first_seen_at": eligible_first_seen,
+                        "last_seen_at": eligible_first_seen,
+                        "is_taken": False,
+                    },
+                    {
+                        "id": 2,
+                        "source": "linkedin",
+                        "source_job_id": "222",
+                        "title": "Too New",
+                        "company": "Acme",
+                        "location": "Cairo",
+                        "url": "https://linkedin.com/jobs/view/222",
+                        "canonical_url": "https://linkedin.com/jobs/view/222",
+                        "content_hash": "h2",
+                        "send_status": "pending",
+                        "first_seen_at": too_new_seen,
+                        "last_seen_at": too_new_seen,
+                        "is_taken": False,
+                    },
+                    {
+                        "id": 3,
+                        "source": "wuzzuf",
+                        "source_job_id": "333",
+                        "title": "Other Source",
+                        "company": "Acme",
+                        "location": "Cairo",
+                        "url": "https://wuzzuf.net/jobs/333",
+                        "canonical_url": "https://wuzzuf.net/jobs/333",
+                        "content_hash": "h3",
+                        "send_status": "pending",
+                        "first_seen_at": eligible_first_seen,
+                        "last_seen_at": eligible_first_seen,
+                        "is_taken": False,
+                    },
+                    {
+                        "id": 4,
+                        "source": "linkedin",
+                        "source_job_id": "444",
+                        "title": "Stale",
+                        "company": "Acme",
+                        "location": "Cairo",
+                        "url": "https://linkedin.com/jobs/view/444",
+                        "canonical_url": "https://linkedin.com/jobs/view/444",
+                        "content_hash": "h4",
+                        "send_status": "pending",
+                        "first_seen_at": stale_seen,
+                        "last_seen_at": stale_seen,
+                        "is_taken": False,
+                    },
+                ],
+                f,
+            )
+
+        jobs = get_linkedin_jobs_to_check(None, limit=10, min_age_hours=6, max_age_days=14)
+        self.assertEqual([job.id for job in jobs], [1])
+
+    def test_mark_stale_linkedin_jobs_inactive_and_alias(self):
+        now = datetime.now(UTC)
+        old_seen = (now - timedelta(days=16)).isoformat()
+        recent_seen = (now - timedelta(days=1)).isoformat()
+
+        with open(self.test_file, "w", encoding="utf-8") as f:
+            json.dump(
+                [
+                    {
+                        "id": 1,
+                        "source": "linkedin",
+                        "title": "Old LinkedIn Job",
+                        "url": "https://linkedin.com/jobs/view/1",
+                        "content_hash": "old-linkedin",
+                        "first_seen_at": old_seen,
+                        "last_seen_at": old_seen,
+                        "is_taken": False,
+                    },
+                    {
+                        "id": 2,
+                        "source": "wuzzuf",
+                        "title": "Old Non LinkedIn Job",
+                        "url": "https://wuzzuf.net/jobs/2",
+                        "content_hash": "old-wuzzuf",
+                        "first_seen_at": old_seen,
+                        "last_seen_at": old_seen,
+                        "is_taken": False,
+                    },
+                    {
+                        "id": 3,
+                        "source": "linkedin",
+                        "title": "Recent LinkedIn Job",
+                        "url": "https://linkedin.com/jobs/view/3",
+                        "content_hash": "recent-linkedin",
+                        "first_seen_at": recent_seen,
+                        "last_seen_at": recent_seen,
+                        "is_taken": False,
+                    },
+                ],
+                f,
+            )
+
+        marked = mark_stale_linkedin_jobs_inactive(None, max_age_days=14)
+        self.assertEqual(marked, 1)
+
+        mark_job_inactive(None, 3)
+        with open(self.test_file, "r", encoding="utf-8") as f:
+            rows = {row["id"]: row for row in json.load(f)}
+
+        self.assertTrue(rows[1]["is_taken"])
+        self.assertFalse(rows[2]["is_taken"])
+        self.assertTrue(rows[3]["is_taken"])
 
 if __name__ == "__main__":
     unittest.main()

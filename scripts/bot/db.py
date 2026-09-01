@@ -219,6 +219,23 @@ def now_utc() -> str:
     return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
+def _parse_iso_timestamp(value: object) -> datetime | None:
+    if not value:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None
+    if text.endswith("Z"):
+        text = f"{text[:-1]}+00:00"
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
+
+
 def normalize_text(value: object) -> str:
     if value is None:
         return ""
@@ -455,6 +472,65 @@ def get_jobs_due_for_weekly_check(conn: connection, min_age_days: int = 7, max_a
         return [_row_to_stored_job(dict(row)) for row in cur.fetchall()]
 
 
+def get_linkedin_jobs_to_check(
+    conn: connection,
+    *,
+    limit: int = 50,
+    min_age_hours: int = 6,
+    max_age_days: int = 14,
+) -> list[StoredJob]:
+    """Return active LinkedIn jobs that are old enough for verification and not too stale."""
+    now = datetime.now(UTC)
+    min_age_cutoff = now - timedelta(hours=min_age_hours)
+    max_age_cutoff = now - timedelta(days=max_age_days)
+
+    if is_json_db_mode():
+        filepath = get_json_db_filepath()
+        if not os.path.exists(filepath):
+            return []
+        with open(filepath, "r", encoding="utf-8") as f:
+            try:
+                jobs_data = json.load(f)
+            except Exception:
+                return []
+        candidates: list[StoredJob] = []
+        for row in jobs_data:
+            if row.get("source") != "linkedin" or row.get("is_taken"):
+                continue
+
+            first_seen = _parse_iso_timestamp(row.get("first_seen_at"))
+            if first_seen is None or first_seen > min_age_cutoff or first_seen < max_age_cutoff:
+                continue
+
+            last_checked = _parse_iso_timestamp(
+                row.get("last_checked_at") or row.get("last_seen_at") or row.get("first_seen_at")
+            )
+            if last_checked and last_checked > min_age_cutoff:
+                continue
+
+            candidates.append(_row_to_stored_job(row))
+            if len(candidates) >= limit:
+                break
+        return candidates
+
+    with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+        cur.execute(
+            """
+            SELECT * FROM jobs
+            WHERE source = 'linkedin'
+              AND (is_taken = false OR is_taken IS NULL)
+              AND COALESCE(NULLIF(last_checked_at, ''), last_seen_at, first_seen_at)::timestamptz
+                    <= NOW() - (%s * INTERVAL '1 hour')
+              AND COALESCE(NULLIF(first_seen_at, ''), last_seen_at, last_checked_at)::timestamptz
+                    >= NOW() - (%s * INTERVAL '1 day')
+            ORDER BY COALESCE(NULLIF(last_checked_at, ''), last_seen_at, first_seen_at)::timestamptz ASC
+            LIMIT %s
+            """,
+            (min_age_hours, max_age_days, limit),
+        )
+        return [_row_to_stored_job(row) for row in cur.fetchall()]
+
+
 def mark_job_taken(conn: connection, job_id: int) -> None:
     """Mark a job as taken/deprecated (hides it from UI)."""
     ts = now_utc()
@@ -480,6 +556,11 @@ def mark_job_taken(conn: connection, job_id: int) -> None:
         cur.execute("UPDATE jobs SET is_taken = true, last_checked_at = %s WHERE id = %s", (ts, job_id))
 
 
+def mark_job_inactive(conn: connection, job_id: int) -> None:
+    """Backwards-compatible alias used by linkedin_expiry_checker."""
+    mark_job_taken(conn, job_id)
+
+
 def mark_job_checked(conn: connection, job_id: int) -> None:
     """Update last_checked_at timestamp for a verified active job."""
     ts = now_utc()
@@ -502,6 +583,50 @@ def mark_job_checked(conn: connection, job_id: int) -> None:
 
     with conn.cursor() as cur:
         cur.execute("UPDATE jobs SET last_checked_at = %s WHERE id = %s", (ts, job_id))
+
+
+def mark_stale_linkedin_jobs_inactive(conn: connection, max_age_days: int = 14) -> int:
+    """Mark stale LinkedIn jobs as inactive instead of deleting them."""
+    cutoff = datetime.now(UTC) - timedelta(days=max_age_days)
+    ts = now_utc()
+
+    if is_json_db_mode():
+        filepath = get_json_db_filepath()
+        if not os.path.exists(filepath):
+            return 0
+        with open(filepath, "r", encoding="utf-8") as f:
+            try:
+                jobs_data = json.load(f)
+            except Exception:
+                return 0
+        marked = 0
+        for row in jobs_data:
+            if row.get("source") != "linkedin" or row.get("is_taken"):
+                continue
+            seen_at = _parse_iso_timestamp(row.get("last_seen_at") or row.get("first_seen_at"))
+            if seen_at is None or seen_at > cutoff:
+                continue
+            row["is_taken"] = True
+            row["last_checked_at"] = ts
+            marked += 1
+        if marked:
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump(jobs_data, f, indent=4, ensure_ascii=False)
+        return marked
+
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            UPDATE jobs
+            SET is_taken = true, last_checked_at = %s
+            WHERE source = 'linkedin'
+              AND (is_taken = false OR is_taken IS NULL)
+              AND COALESCE(NULLIF(last_seen_at, ''), first_seen_at)::timestamptz
+                    <= NOW() - (%s * INTERVAL '1 day')
+            """,
+            (ts, max_age_days),
+        )
+        return cur.rowcount
 
 
 def purge_jobs_older_than_two_weeks(conn: connection, max_age_days: int = 14) -> int:
