@@ -175,6 +175,9 @@ def init_db(conn: connection) -> None:
             CREATE INDEX IF NOT EXISTS idx_jobs_source
                 ON jobs(source, last_seen_at);
 
+            CREATE INDEX IF NOT EXISTS idx_jobs_is_taken
+                ON jobs(is_taken, first_seen_at);
+
             CREATE TABLE IF NOT EXISTS job_sends (
                 id SERIAL PRIMARY KEY,
                 job_id INTEGER NOT NULL,
@@ -398,9 +401,9 @@ def upsert_job(conn: connection, job: Job) -> tuple[int, bool]:
             INSERT INTO jobs (
                 source, source_job_id, title, company, location, url, canonical_url,
                 salary, job_type, tags_json, is_remote, original_source,
-                content_hash, send_status, first_seen_at, last_seen_at
+                content_hash, send_status, first_seen_at, last_seen_at, is_taken
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'pending', %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'pending', %s, %s, false)
             RETURNING id
             """,
             (
@@ -425,10 +428,10 @@ def upsert_jobs(conn: connection, jobs: list[Job]) -> tuple[int, int]:
 
 
 def get_jobs_due_for_weekly_check(conn: connection, min_age_days: int = 7, max_age_days: int = 14, limit: int = 15) -> list[StoredJob]:
-    """Get active jobs that were last checked/seen ~7 to 14 days ago for a single weekly HTTP verification."""
+    """Get active jobs that were last seen ~7 to 14 days ago and have NEVER been checked yet."""
     now = datetime.now(UTC)
-    cutoff_min = (now - timedelta(days=min_age_days)).isoformat()
-    cutoff_max = (now - timedelta(days=max_age_days)).isoformat()
+    cutoff_min = (now - timedelta(days=min_age_days)).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    cutoff_max = (now - timedelta(days=max_age_days)).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
     if is_json_db_mode():
         filepath = get_json_db_filepath()
@@ -443,8 +446,11 @@ def get_jobs_due_for_weekly_check(conn: connection, min_age_days: int = 7, max_a
         for row in jobs_data:
             if row.get("is_taken"):
                 continue
-            last_check = row.get("last_checked_at") or row.get("last_seen_at") or row.get("first_seen_at", "")
-            if cutoff_max <= last_check <= cutoff_min:
+            # Only check jobs that have NEVER been checked before
+            if row.get("last_checked_at"):
+                continue
+            last_seen = row.get("last_seen_at") or row.get("first_seen_at", "")
+            if cutoff_max <= last_seen <= cutoff_min:
                 results.append(_row_to_stored_job(row))
                 if len(results) >= limit:
                     break
@@ -455,14 +461,15 @@ def get_jobs_due_for_weekly_check(conn: connection, min_age_days: int = 7, max_a
             """
             SELECT * FROM jobs
             WHERE (is_taken = false OR is_taken IS NULL)
-              AND COALESCE(last_checked_at, last_seen_at, first_seen_at) <= (NOW() - INTERVAL '%s days')::text
-              AND COALESCE(last_checked_at, last_seen_at, first_seen_at) >= (NOW() - INTERVAL '%s days')::text
-            ORDER BY COALESCE(last_checked_at, last_seen_at) ASC
+              AND (last_checked_at IS NULL OR last_checked_at = '')
+              AND COALESCE(last_seen_at, first_seen_at) <= %s
+              AND COALESCE(last_seen_at, first_seen_at) >= %s
+            ORDER BY COALESCE(last_seen_at, first_seen_at) ASC
             LIMIT %s
             """,
-            (min_age_days, max_age_days, limit)
+            (cutoff_min, cutoff_max, limit)
         )
-        return [_row_to_stored_job(row) for row in cur.fetchall()]
+        return [_row_to_stored_job(dict(row)) for row in cur.fetchall()]
 
 
 def get_linkedin_jobs_to_check(
@@ -623,8 +630,10 @@ def mark_stale_linkedin_jobs_inactive(conn: connection, max_age_days: int = 14) 
 
 
 def purge_jobs_older_than_two_weeks(conn: connection, max_age_days: int = 14) -> int:
-    """Hard-delete jobs that are 2 weeks or older (>= 14 days) from the database/JSON file."""
-    cutoff = (datetime.now(UTC) - timedelta(days=max_age_days)).isoformat()
+    """Hard-delete jobs that are 2 weeks old (>= 14 days since last seen) OR were checked >= 7 days ago."""
+    now = datetime.now(UTC)
+    cutoff_7d = (now - timedelta(days=7)).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    cutoff_14d = (now - timedelta(days=max_age_days)).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
     if is_json_db_mode():
         filepath = get_json_db_filepath()
@@ -636,10 +645,18 @@ def purge_jobs_older_than_two_weeks(conn: connection, max_age_days: int = 14) ->
             except Exception:
                 return 0
         original_count = len(jobs_data)
-        retained_jobs = [
-            row for row in jobs_data
-            if (row.get("last_seen_at") or row.get("first_seen_at") or "") > cutoff
-        ]
+        retained_jobs = []
+        for row in jobs_data:
+            last_checked = row.get("last_checked_at")
+            last_seen = row.get("last_seen_at") or row.get("first_seen_at") or ""
+
+            # Delete if checked >= 7 days ago, OR if last seen >= 14 days ago
+            is_stale_checked = bool(last_checked and str(last_checked).strip() and str(last_checked) <= cutoff_7d)
+            is_stale_seen = bool(last_seen and str(last_seen) <= cutoff_14d)
+
+            if not (is_stale_checked or is_stale_seen):
+                retained_jobs.append(row)
+
         purged_count = original_count - len(retained_jobs)
         if purged_count > 0:
             with open(filepath, "w", encoding="utf-8") as f:
@@ -650,9 +667,10 @@ def purge_jobs_older_than_two_weeks(conn: connection, max_age_days: int = 14) ->
         cur.execute(
             """
             DELETE FROM jobs
-            WHERE COALESCE(last_seen_at, first_seen_at) < (NOW() - INTERVAL '%s days')::text
+            WHERE (last_checked_at IS NOT NULL AND last_checked_at != '' AND last_checked_at <= %s)
+               OR (COALESCE(last_seen_at, first_seen_at) <= %s)
             """,
-            (max_age_days,)
+            (cutoff_7d, cutoff_14d)
         )
         return cur.rowcount
 
@@ -683,7 +701,7 @@ def get_jobs_for_sending(conn: connection, limit: int = 100) -> list[StoredJob]:
             """,
             (limit,)
         )
-        return [_row_to_stored_job(row) for row in cur.fetchall()]
+        return [_row_to_stored_job(dict(row)) for row in cur.fetchall()]
 
 
 def record_topic_send(conn: connection, job_id: int, topic_key: str, success: bool, error: str = "") -> None:
@@ -773,14 +791,16 @@ def estimate_dynamic_limit(conn: connection, days: int = 14, runs_per_day: int =
     if is_json_db_mode():
         return 35
 
+    cutoff = (datetime.now(UTC) - timedelta(days=days)).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
     with conn.cursor() as cur:
         cur.execute(
             """
             SELECT count(*) 
             FROM jobs 
-            WHERE first_seen_at >= (NOW() - INTERVAL '%s days')::text
+            WHERE first_seen_at >= %s
             """,
-            (days,)
+            (cutoff,)
         )
         total_recent_jobs = cur.fetchone()[0] or 0
         
