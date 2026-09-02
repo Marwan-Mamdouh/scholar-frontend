@@ -648,11 +648,11 @@ def purge_jobs_older_than_two_weeks(conn: connection, max_age_days: int = 14) ->
         retained_jobs = []
         for row in jobs_data:
             last_checked = row.get("last_checked_at")
-            last_seen = row.get("last_seen_at") or row.get("first_seen_at") or ""
+            first_seen = row.get("first_seen_at") or ""
 
-            # Delete if checked >= 7 days ago, OR if last seen >= 14 days ago
+            # Delete if checked >= 7 days ago, OR if first seen >= 14 days ago
             is_stale_checked = bool(last_checked and str(last_checked).strip() and str(last_checked) <= cutoff_7d)
-            is_stale_seen = bool(last_seen and str(last_seen) <= cutoff_14d)
+            is_stale_seen = bool(first_seen and str(first_seen) <= cutoff_14d)
 
             if not (is_stale_checked or is_stale_seen):
                 retained_jobs.append(row)
@@ -668,7 +668,7 @@ def purge_jobs_older_than_two_weeks(conn: connection, max_age_days: int = 14) ->
             """
             DELETE FROM jobs
             WHERE (last_checked_at IS NOT NULL AND last_checked_at != '' AND last_checked_at <= %s)
-               OR (COALESCE(last_seen_at, first_seen_at) <= %s)
+               OR (first_seen_at <= %s)
             """,
             (cutoff_7d, cutoff_14d)
         )
