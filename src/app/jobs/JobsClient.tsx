@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Search, ChevronDown, User, Briefcase, Code, Globe, X, AlertCircle } from 'lucide-react';
+import { Search, ChevronDown, User, Briefcase, Code, Globe, AlertCircle } from 'lucide-react';
 
 const getCompanyColor = (companyName: string) => {
   const colors = [
@@ -38,33 +38,9 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
   const [selectedCountry, setSelectedCountry] = useState('');
   const [selectedDiscipline, setSelectedDiscipline] = useState('');
   const [selectedCompany, setSelectedCompany] = useState('');
-  const [hiddenJobs, setHiddenJobs] = useState<Set<string | number>>(new Set());
-
-  const handleMarkAsTaken = async (e: React.MouseEvent, jobId: string | number) => {
-    e.stopPropagation();
-    setHiddenJobs(prev => new Set(prev).add(jobId));
-
-    try {
-      const res = await fetch('/api/jobs/take', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: jobId })
-      });
-      if (!res.ok) {
-        throw new Error('Failed to mark as taken');
-      }
-    } catch (err) {
-      console.error(err);
-      setHiddenJobs(prev => {
-        const next = new Set(prev);
-        next.delete(jobId);
-        return next;
-      });
-    }
-  };
 
   const filteredJobs = useMemo(() => {
-    let result = (initialJobs || []).filter(job => !hiddenJobs.has(job.id));
+    let result = (initialJobs || []);
 
     if (searchQuery.trim()) {
       const lowerQuery = searchQuery.toLowerCase();
@@ -81,7 +57,7 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
 
     // Simplified filtering logic for demo
     return result;
-  }, [initialJobs, searchQuery, selectedCompany, hiddenJobs]);
+  }, [initialJobs, searchQuery, selectedCompany]);
 
   const uniqueCompanies = useMemo(() => {
     const comps = new Set((initialJobs || []).map(j => j.company).filter(Boolean));
@@ -209,13 +185,6 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <button 
-                      onClick={(e) => handleMarkAsTaken(e, job.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all border border-red-500/20"
-                      title="Hide Job"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
                     <div className="px-2.5 py-1 rounded bg-white/5 border border-white/10 text-neutral-300 text-xs font-bold tracking-wider">
                       EG
                     </div>
