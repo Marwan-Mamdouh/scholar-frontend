@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Search, ChevronDown, User, Briefcase, Code, Globe, AlertCircle } from 'lucide-react';
 
 const getCompanyColor = (companyName: string) => {
@@ -31,6 +31,72 @@ interface JobData {
   url?: string;
   job_type?: string;
   first_seen_at?: string;
+}
+
+function CustomSelect({
+  value,
+  onChange,
+  options,
+  placeholder,
+  icon: Icon
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  options: { label: string; value: string }[];
+  placeholder: string;
+  icon?: any;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(o => o.value === value);
+
+  return (
+    <div className="relative flex-1 lg:max-w-[280px]" ref={ref}>
+      {Icon && (
+        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none z-10">
+          <Icon className="h-4 w-4 text-neutral-400" />
+        </div>
+      )}
+      <div 
+        className={`w-full bg-[#111827]/50 border border-white/5 text-neutral-300 text-sm rounded-xl py-3.5 ${Icon ? 'pl-11' : 'pl-5'} pr-10 cursor-pointer flex items-center justify-between transition-all hover:bg-white/10 select-none`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
+        <ChevronDown className={`absolute right-4 h-4 w-4 text-neutral-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </div>
+
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-2 bg-[#1a2332]/60 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl max-h-60 overflow-y-auto py-2">
+          <div 
+            className={`px-4 py-2.5 text-sm cursor-pointer transition-colors select-none ${value === '' ? 'bg-cyan-500/10 text-cyan-400' : 'text-neutral-400 hover:bg-white/5 hover:text-neutral-200'}`}
+            onClick={() => { onChange(''); setIsOpen(false); }}
+          >
+            {placeholder}
+          </div>
+          {options.map((opt) => (
+            <div 
+              key={opt.value}
+              className={`px-4 py-2.5 text-sm cursor-pointer transition-colors select-none ${value === opt.value ? 'bg-cyan-500/10 text-cyan-400' : 'text-neutral-300 hover:bg-white/5 hover:text-neutral-100'}`}
+              onClick={() => { onChange(opt.value); setIsOpen(false); }}
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function JobsClient({ initialJobs, serverError }: { initialJobs: JobData[], serverError?: string }) {
@@ -83,27 +149,20 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
         <div className="flex flex-col lg:flex-row gap-4 mb-12 bg-[#1a2332]/80 backdrop-blur-md p-2 rounded-2xl border border-white/5 shadow-lg">
           
           {/* Countries Dropdown */}
-          <div className="relative flex-1 lg:max-w-[280px]">
-            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-              <Globe className="h-4 w-4 text-neutral-400" />
-            </div>
-            <select 
-              className="w-full appearance-none bg-[#111827]/50 border border-white/5 text-neutral-300 text-sm rounded-xl py-3.5 pl-11 pr-10 focus:outline-none focus:border-white/20 cursor-pointer"
-              value={selectedCountry}
-              onChange={(e) => setSelectedCountry(e.target.value)}
-            >
-              <option value="" className="bg-[#0f172a]">Select Countries (0)</option>
-              <option value="EG" className="bg-[#0f172a]">Egypt</option>
-              <option value="US" className="bg-[#0f172a]">United States</option>
-            </select>
-            <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-              <ChevronDown className="h-4 w-4 text-neutral-400" />
-            </div>
-          </div>
+          <CustomSelect
+            value={selectedCountry}
+            onChange={setSelectedCountry}
+            placeholder="Select Countries (0)"
+            options={[
+              { label: 'Egypt', value: 'EG' },
+              { label: 'United States', value: 'US' }
+            ]}
+            icon={Globe}
+          />
 
           {/* Search Input */}
           <div className="relative flex-1">
-            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none z-10">
               <Search className="h-4 w-4 text-neutral-400" />
             </div>
             <input
@@ -116,37 +175,23 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
           </div>
 
           {/* Disciplines Dropdown */}
-          <div className="relative flex-1 lg:max-w-[280px]">
-            <select 
-              className="w-full appearance-none bg-[#111827]/50 border border-white/5 text-neutral-300 text-sm rounded-xl py-3.5 pl-5 pr-10 focus:outline-none focus:border-white/20 cursor-pointer"
-              value={selectedDiscipline}
-              onChange={(e) => setSelectedDiscipline(e.target.value)}
-            >
-              <option value="" className="bg-[#0f172a]">All Disciplines</option>
-              <option value="engineering" className="bg-[#0f172a]">Engineering</option>
-              <option value="software" className="bg-[#0f172a]">Software</option>
-            </select>
-            <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-              <ChevronDown className="h-4 w-4 text-neutral-400" />
-            </div>
-          </div>
+          <CustomSelect
+            value={selectedDiscipline}
+            onChange={setSelectedDiscipline}
+            placeholder="All Disciplines"
+            options={[
+              { label: 'Engineering', value: 'engineering' },
+              { label: 'Software', value: 'software' }
+            ]}
+          />
 
           {/* Companies Dropdown */}
-          <div className="relative flex-1 lg:max-w-[280px]">
-            <select 
-              className="w-full appearance-none bg-[#111827]/50 border border-white/5 text-neutral-300 text-sm rounded-xl py-3.5 pl-5 pr-10 focus:outline-none focus:border-white/20 cursor-pointer"
-              value={selectedCompany}
-              onChange={(e) => setSelectedCompany(e.target.value)}
-            >
-              <option value="" className="bg-[#0f172a]">All Companies</option>
-              {uniqueCompanies.map((c: string) => (
-                <option key={c} value={c} className="bg-[#0f172a]">{c}</option>
-              ))}
-            </select>
-            <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-              <ChevronDown className="h-4 w-4 text-neutral-400" />
-            </div>
-          </div>
+          <CustomSelect
+            value={selectedCompany}
+            onChange={setSelectedCompany}
+            placeholder="All Companies"
+            options={uniqueCompanies.map(c => ({ label: c, value: c }))}
+          />
           
         </div>
 
