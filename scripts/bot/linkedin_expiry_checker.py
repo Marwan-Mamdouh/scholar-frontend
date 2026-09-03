@@ -69,6 +69,7 @@ CLOSED_MARKERS: tuple[str, ...] = (
     "no longer available",
     "application deadline has passed",
     "expired",
+    "no longer accepting",
 )
 
 # If the final URL path contains any of these the listing was removed / gated.

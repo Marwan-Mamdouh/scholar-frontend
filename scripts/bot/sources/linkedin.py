@@ -112,6 +112,7 @@ CLOSED_JOB_MARKERS = (
     "no longer available",
     "expired",
     "closed",
+    "no longer accepting",
 )
 
 
