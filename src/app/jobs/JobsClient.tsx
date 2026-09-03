@@ -92,9 +92,9 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
               value={selectedCountry}
               onChange={(e) => setSelectedCountry(e.target.value)}
             >
-              <option value="">Select Countries (0)</option>
-              <option value="EG">Egypt</option>
-              <option value="US">United States</option>
+              <option value="" className="bg-[#0f172a]">Select Countries (0)</option>
+              <option value="EG" className="bg-[#0f172a]">Egypt</option>
+              <option value="US" className="bg-[#0f172a]">United States</option>
             </select>
             <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
               <ChevronDown className="h-4 w-4 text-neutral-400" />
@@ -122,9 +122,9 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
               value={selectedDiscipline}
               onChange={(e) => setSelectedDiscipline(e.target.value)}
             >
-              <option value="">All Disciplines</option>
-              <option value="engineering">Engineering</option>
-              <option value="software">Software</option>
+              <option value="" className="bg-[#0f172a]">All Disciplines</option>
+              <option value="engineering" className="bg-[#0f172a]">Engineering</option>
+              <option value="software" className="bg-[#0f172a]">Software</option>
             </select>
             <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
               <ChevronDown className="h-4 w-4 text-neutral-400" />
@@ -138,9 +138,9 @@ export default function JobsClient({ initialJobs, serverError }: { initialJobs: 
               value={selectedCompany}
               onChange={(e) => setSelectedCompany(e.target.value)}
             >
-              <option value="">All Companies</option>
+              <option value="" className="bg-[#0f172a]">All Companies</option>
               {uniqueCompanies.map((c: string) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c} className="bg-[#0f172a]">{c}</option>
               ))}
             </select>
             <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
