@@ -7,6 +7,7 @@ import LogoIcon from "./Icons/Logo";
 import ThemeIcon from "./Icons/Theme";
 import { Menu, X } from "lucide-react";
 import Button from "./ui/Button/Button";
+import { User } from "./Icons/User";
 
 const navItems = [
   { label: "Home", href: "/" },
@@ -110,18 +111,17 @@ export default function Header() {
 
         {/* Desktop actions and mobile login */}
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-2.5 lg:w-45 lg:justify-end border-t border-neutral-800 pt-4 lg:border-t-0 lg:pt-0">
-          <Button
-            aria-label="Log in"
-            className="h-13.5 min-w-24 w-full lg:w-auto flex justify-center"
-            intent="primary"
-            variant="outlined"
+          <button
+            aria-label="User profile"
+            className="flex h-13.5 w-13.5 items-center justify-center rounded-xl px-2 py-1 text-neutral-300 transition-colors duration-200 hover:text-neutral-100 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-100"
+            type="button"
             onClick={() => {
               setIsMenuOpen(false);
               router.push("/login");
             }}
           >
-            Login
-          </Button>
+            <User className="h-8 w-8" />
+          </button>
           <button
             aria-label="Toggle theme"
             className="hidden lg:flex h-13.5 w-13.5 items-center justify-center rounded-xl px-2 py-1 text-neutral-300 transition-colors duration-200 hover:text-neutral-100 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-100"
