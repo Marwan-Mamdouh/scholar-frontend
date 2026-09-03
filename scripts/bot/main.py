@@ -333,8 +333,10 @@ def run_bot(
         # 1-Week Targeted Expiry Check (Micro-batch)
         try:
             run_weekly_expiry_checks(conn)
+            conn.commit()
         except Exception as exc:
             log.warning(f"Weekly expiry check failed (non-critical): {exc}")
+            conn.rollback()
 
         # 2-Week Automatic Hard Removal (>= 14 days old)
         try:
@@ -342,8 +344,10 @@ def run_bot(
             summary.purged_jobs = purged
             if purged > 0:
                 log.info(f"🗑️ Auto-removed {purged} jobs older than 2 weeks (>= 14 days).")
+            conn.commit()
         except Exception as exc:
             log.warning(f"2-week purge failed (non-critical): {exc}")
+            conn.rollback()
 
         summary.total_jobs_in_db = count_jobs(conn)
 

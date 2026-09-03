@@ -1,461 +1,282 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
-import { MapPin, Briefcase, Building, ExternalLink, Calendar, Search, AlertCircle, Filter, ChevronDown, ChevronUp, X } from 'lucide-react';
-import Button from "@/src/components/ui/Button/Button";
-import LightingGlow from "@/src/components/ui/LightingGlow/LightingGlow";
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { Search, ChevronDown, User, Briefcase, Code, Globe, AlertCircle } from 'lucide-react';
 
-const formatDate = (dateStr?: string) => {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return dateStr;
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  });
+const getCompanyColor = (companyName: string) => {
+  const colors = [
+    'bg-blue-600',
+    'bg-cyan-600',
+    'bg-red-600',
+    'bg-emerald-600',
+    'bg-purple-600',
+    'bg-orange-600',
+    'bg-pink-600',
+    'bg-indigo-600'
+  ];
+  if (!companyName) return colors[0];
+  let hash = 0;
+  for (let i = 0; i < companyName.length; i++) {
+    hash = companyName.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
 };
 
-export default function JobsClient({ initialJobs, serverError }: { initialJobs: any[], serverError?: string }) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [categories, setCategories] = useState<string[]>([]);
-  const [seniorities, setSeniorities] = useState<string[]>([]);
-  const [locations, setLocations] = useState<string[]>([]);
-  const [providers, setProviders] = useState<string[]>([]);
-  const [companies, setCompanies] = useState<string[]>([]);
-  const [hiddenJobs, setHiddenJobs] = useState<Set<number>>(new Set());
+interface JobData {
+  id: string | number;
+  title: string;
+  company?: string;
+  tags_json?: string;
+  location?: string;
+  url?: string;
+  job_type?: string;
+  first_seen_at?: string;
+}
 
-  const handleMarkAsTaken = async (jobId: number) => {
-    // Optimistic UI update
-    setHiddenJobs(prev => new Set(prev).add(jobId));
+function CustomSelect({
+  value,
+  onChange,
+  options,
+  placeholder,
+  icon: Icon
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  options: { label: string; value: string }[];
+  placeholder: string;
+  icon?: any;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
-    try {
-      const res = await fetch('/api/jobs/take', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: jobId })
-      });
-      if (!res.ok) {
-        throw new Error('Failed to mark as taken');
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setIsOpen(false);
       }
-    } catch (err) {
-      console.error(err);
-      // Revert optimistic update
-      setHiddenJobs(prev => {
-        const next = new Set(prev);
-        next.delete(jobId);
-        return next;
-      });
-      alert("Failed to update job status.");
-    }
-  };
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(o => o.value === value);
+
+  return (
+    <div className="relative flex-1 lg:max-w-[280px]" ref={ref}>
+      {Icon && (
+        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none z-10">
+          <Icon className="h-4 w-4 text-neutral-400" />
+        </div>
+      )}
+      <div 
+        className={`w-full bg-[#111827]/50 border border-white/5 text-neutral-300 text-sm rounded-xl py-3.5 ${Icon ? 'pl-11' : 'pl-5'} pr-10 cursor-pointer flex items-center justify-between transition-all hover:bg-white/10 select-none`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
+        <ChevronDown className={`absolute right-4 h-4 w-4 text-neutral-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </div>
+
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-2 bg-[#1a2332]/60 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl max-h-60 overflow-y-auto py-2">
+          <div 
+            className={`px-4 py-2.5 text-sm cursor-pointer transition-colors select-none ${value === '' ? 'bg-cyan-500/10 text-cyan-400' : 'text-neutral-400 hover:bg-white/5 hover:text-neutral-200'}`}
+            onClick={() => { onChange(''); setIsOpen(false); }}
+          >
+            {placeholder}
+          </div>
+          {options.map((opt) => (
+            <div 
+              key={opt.value}
+              className={`px-4 py-2.5 text-sm cursor-pointer transition-colors select-none ${value === opt.value ? 'bg-cyan-500/10 text-cyan-400' : 'text-neutral-300 hover:bg-white/5 hover:text-neutral-100'}`}
+              onClick={() => { onChange(opt.value); setIsOpen(false); }}
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function JobsClient({ initialJobs, serverError }: { initialJobs: JobData[], serverError?: string }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState('');
+  const [selectedDiscipline, setSelectedDiscipline] = useState('');
+  const [selectedCompany, setSelectedCompany] = useState('');
 
   const filteredJobs = useMemo(() => {
-    let result = (initialJobs || []).filter(job => !hiddenJobs.has(job.id));
+    let result = (initialJobs || []);
 
     if (searchQuery.trim()) {
       const lowerQuery = searchQuery.toLowerCase();
-      result = result.filter((job) => {
-        const titleMatch = job.title?.toLowerCase().includes(lowerQuery);
-        const companyMatch = job.company?.toLowerCase().includes(lowerQuery);
-        const locationMatch = job.location?.toLowerCase().includes(lowerQuery);
-        return titleMatch || companyMatch || locationMatch;
-      });
+      result = result.filter(job => 
+        job.title?.toLowerCase().includes(lowerQuery) || 
+        job.company?.toLowerCase().includes(lowerQuery) ||
+        job.tags_json?.toLowerCase().includes(lowerQuery)
+      );
     }
 
-    if (categories.length > 0) {
-      result = result.filter(job => {
-        const searchString = `${job.title} ${job.tags_json}`.toLowerCase();
-        const knownCategories = [
-          "software", "computer science", "information technology", "engineering",
-          "data", "marketing", "business", "design", "web"
-        ];
-        
-        const hasSelectedCategory = categories.some(cat => cat !== 'others' && searchString.includes(cat.toLowerCase()));
-        if (hasSelectedCategory) return true;
-        
-        if (categories.includes('others')) {
-          const hasKnownCategory = knownCategories.some(cat => searchString.includes(cat));
-          if (!hasKnownCategory) return true;
-        }
-        
-        return false;
-      });
+    if (selectedCompany) {
+      result = result.filter(job => job.company?.toLowerCase() === selectedCompany.toLowerCase());
     }
 
-    if (seniorities.length > 0) {
-      result = result.filter(job => {
-        const searchString = `${job.title} ${job.tags_json}`.toLowerCase();
-        return seniorities.some(sen => searchString.includes(sen.toLowerCase()));
-      });
-    }
-
-    if (locations.length > 0) {
-      result = result.filter(job => {
-        const isRemote = job.is_remote === 1 || job.location?.toLowerCase().includes('remote');
-        const matchesRemote = locations.includes('remote') && isRemote;
-        const matchesOnsite = locations.includes('onsite') && !isRemote;
-        return matchesRemote || matchesOnsite;
-      });
-    }
-
-    if (providers.length > 0) {
-      result = result.filter(job => providers.includes(job.source?.toLowerCase()));
-    }
-
-    if (companies.length > 0) {
-      result = result.filter(job => companies.includes(job.company?.toLowerCase()));
-    }
-
+    // Simplified filtering logic for demo
     return result;
-  }, [initialJobs, searchQuery, categories, seniorities, locations, providers, companies, hiddenJobs]);
+  }, [initialJobs, searchQuery, selectedCompany]);
 
-  const toggleFilter = (setFilter: React.Dispatch<React.SetStateAction<string[]>>, value: string) => {
-    setFilter(prev => prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]);
-  };
-
-  const hasActiveFilters = categories.length > 0 || seniorities.length > 0 || locations.length > 0 || providers.length > 0 || companies.length > 0 || searchQuery.trim().length > 0;
-
-  const clearAllFilters = () => {
-    setSearchQuery('');
-    setCategories([]);
-    setSeniorities([]);
-    setLocations([]);
-    setProviders([]);
-    setCompanies([]);
-  };
-
-  const FilterSection = ({ 
-    title, 
-    options, 
-    state, 
-    setState,
-    defaultOpen = true
-  }: { 
-    title: string, 
-    options: { label: string, value: string }[], 
-    state: string[], 
-    setState: React.Dispatch<React.SetStateAction<string[]>>,
-    defaultOpen?: boolean
-  }) => {
-    const [isOpen, setIsOpen] = useState(defaultOpen);
-    const selectedCount = state.length;
-
-    return (
-      <div className="border-b border-white/10 py-4 last:border-b-0">
-        <div 
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center justify-between cursor-pointer select-none group"
-        >
-          <div className="flex items-center gap-2">
-            <h3 className="font-bold text-neutral-100 group-hover:text-primary-300 transition-colors text-base">
-              {title}
-            </h3>
-            {selectedCount > 0 && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-accent-400/20 text-accent-300 border border-accent-400/30">
-                {selectedCount}
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            {selectedCount > 0 && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setState([]);
-                }}
-                className="text-xs font-medium text-accent-400 hover:text-accent-300 transition-colors px-2 py-0.5 rounded border border-accent-400/30 bg-accent-400/10"
-              >
-                Clear
-              </button>
-            )}
-            <button 
-              type="button" 
-              className="text-neutral-400 group-hover:text-neutral-200 transition-colors p-1"
-              aria-label={isOpen ? `Collapse ${title}` : `Expand ${title}`}
-            >
-              {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
-          </div>
-        </div>
-
-        {isOpen && (
-          <div className="mt-3 space-y-2.5 pl-1 transition-all duration-200 ease-in-out">
-            {options.map(option => {
-              const isChecked = state.includes(option.value);
-              return (
-                <label key={option.value} className="flex items-center space-x-3 cursor-pointer group/item py-0.5">
-                  <input
-                    type="checkbox"
-                    checked={isChecked}
-                    onChange={() => toggleFilter(setState, option.value)}
-                    className="h-4 w-4 text-accent-400 border-neutral-600 rounded focus:ring-accent-400 cursor-pointer bg-white/10 accent-accent-500"
-                  />
-                  <span className={`text-sm font-medium transition-colors ${isChecked ? 'text-accent-300 font-semibold' : 'text-neutral-200 group-hover/item:text-white'}`}>
-                    {option.label}
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    );
-  };
+  const uniqueCompanies = useMemo(() => {
+    const comps = new Set((initialJobs || []).map(j => j.company).filter(Boolean));
+    return Array.from(comps).sort() as string[];
+  }, [initialJobs]);
 
   return (
-    <div className="min-h-screen bg-transparent font-main tracking-eyebrow pt-28 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-[#09111e] font-main tracking-eyebrow pt-32 pb-24 px-4 sm:px-6 lg:px-12 relative overflow-hidden">
       
-      {/* Background Glows to match Home page */}
-      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-        <div className="absolute top-[10%] right-[15%] w-71.5 h-50 opacity-60">
-          <LightingGlow variant="primary" className="blur-[150px]" />
-        </div>
-        <div className="absolute bottom-[20%] left-[5%] w-73.5 h-54 opacity-60">
-          <LightingGlow variant="accent" className="blur-[150px]" />
-        </div>
+      {/* Background Glows matching Figma */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-cyan-900/20 blur-[150px] rounded-full translate-x-1/3 -translate-y-1/3"></div>
       </div>
 
-      <div className="max-w-[1600px] mx-auto relative z-10">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar */}
-          <aside className="w-full lg:w-1/4 flex-shrink-0">
-            <div className="bg-white/5 p-6 rounded-xl shadow-sm border border-accent-200/50 sticky top-4">
-              <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/10">
-                <div className="flex items-center gap-2">
-                  <Filter className="w-5 h-5 text-neutral-300" />
-                  <h2 className="text-lg font-bold text-neutral-50 tracking-display">Filters</h2>
-                </div>
-                {hasActiveFilters && (
-                  <button
-                    onClick={clearAllFilters}
-                    className="text-xs font-semibold text-red-400 hover:text-red-300 transition-colors flex items-center gap-1 bg-red-500/10 px-2.5 py-1 rounded border border-red-500/20"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                    Reset All
-                  </button>
-                )}
-              </div>
-              
-              <FilterSection 
-                title="Category" 
-                state={categories} 
-                setState={setCategories}
-                defaultOpen={true}
-                options={[
-                  { label: "IT / Software Development", value: "software" },
-                  { label: "Computer Science", value: "computer science" },
-                  { label: "Information Technology (IT)", value: "information technology" },
-                  { label: "Engineering & Telecom", value: "engineering" },
-                  { label: "Data & Analytics", value: "data" },
-                  { label: "Marketing & PR", value: "marketing" },
-                  { label: "Business & Operations", value: "business" },
-                  { label: "Design (UI/UX)", value: "design" },
-                  { label: "Web & Mobile", value: "web" },
-                  { label: "Others", value: "others" }
-                ]} 
-              />
-              
-              <FilterSection 
-                title="Company" 
-                state={companies} 
-                setState={setCompanies}
-                defaultOpen={false}
-                options={[
-                  { label: "Siemens", value: "siemens" },
-                  { label: "Capgemini", value: "capgemini" },
-                  { label: "Cisco", value: "cisco" },
-                  { label: "Siemens Energy", value: "siemens energy" },
-                  { label: "STMicroelectronics", value: "stmicroelectronics" },
-                  { label: "MediaTek", value: "mediatek" },
-                  { label: "Brightskies", value: "brightskies" },
-                  { label: "HCLTech", value: "hcltech" },
-                  { label: "Nawy", value: "nawy" },
-                  { label: "Analog Devices", value: "analog devices" },
-                  { label: "InfiniLink", value: "infinilink" },
-                  { label: "Valeo", value: "valeo" },
-                  { label: "Siemens Gamesa", value: "siemens gamesa" },
-                  { label: "ISS INTERNATIONAL SpA", value: "iss international spa" },
-                  { label: "Siemens Digital Industries Software", value: "siemens digital industries software" },
-                  { label: "Mixel-Egypt", value: "mixel-egypt" }
-                ]} 
-              />
-              
-              <FilterSection 
-                title="Seniority Level" 
-                state={seniorities} 
-                setState={setSeniorities}
-                defaultOpen={true}
-                options={[
-                  { label: "Junior", value: "junior" },
-                  { label: "Mid-Level", value: "mid" },
-                  { label: "Senior", value: "senior" }
-                ]} 
-              />
-              
-              <FilterSection 
-                title="Work Location" 
-                state={locations} 
-                setState={setLocations}
-                defaultOpen={true}
-                options={[
-                  { label: "Remote", value: "remote" },
-                  { label: "Onsite", value: "onsite" }
-                ]} 
-              />
-              
-              <FilterSection 
-                title="Website Provider" 
-                state={providers} 
-                setState={setProviders}
-                defaultOpen={true}
-                options={[
-                  { label: "LinkedIn", value: "linkedin" },
-                  { label: "Wuzzuf", value: "wuzzuf" }
-                ]} 
-              />
+      <div className="max-w-[1440px] mx-auto relative z-10">
+        
+        {/* Title */}
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-8 tracking-wide uppercase">
+          Global Career Map
+        </h1>
+
+        {/* Filter Bar */}
+        <div className="flex flex-col lg:flex-row gap-4 mb-12 bg-[#1a2332]/80 backdrop-blur-md p-2 rounded-2xl border border-white/5 shadow-lg">
+          
+          {/* Countries Dropdown */}
+          <CustomSelect
+            value={selectedCountry}
+            onChange={setSelectedCountry}
+            placeholder="Select Countries (0)"
+            options={[
+              { label: 'Egypt', value: 'EG' },
+              { label: 'United States', value: 'US' }
+            ]}
+            icon={Globe}
+          />
+
+          {/* Search Input */}
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none z-10">
+              <Search className="h-4 w-4 text-neutral-400" />
             </div>
-          </aside>
+            <input
+              type="text"
+              className="w-full bg-[#111827]/50 border border-white/5 text-neutral-200 text-sm rounded-xl py-3.5 pl-11 pr-4 focus:outline-none focus:border-white/20 placeholder-neutral-500"
+              placeholder="Search position, stack..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
 
-          {/* Main Grid */}
-          <main className="w-full lg:w-3/4">
-            
-            <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <h1 className="font-main font-bold capitalize text-neutral-50 text-3xl sm:text-4xl tracking-display">
-                Software Engineering Jobs
-              </h1>
-              <p className="text-neutral-300 text-sm font-medium">
-                Showing {filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'}
-              </p>
-            </div>
+          {/* Disciplines Dropdown */}
+          <CustomSelect
+            value={selectedDiscipline}
+            onChange={setSelectedDiscipline}
+            placeholder="All Disciplines"
+            options={[
+              { label: 'Engineering', value: 'engineering' },
+              { label: 'Software', value: 'software' }
+            ]}
+          />
 
-            {/* Search Bar */}
-            <div className="w-full mb-8">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-neutral-400" />
-                </div>
-                <input
-                  type="text"
-                  className="block w-full pl-12 pr-4 py-4 border border-accent-200/50 rounded-xl leading-5 bg-white/5 text-neutral-50 placeholder-neutral-300 focus:outline-none focus:ring-1 focus:ring-primary-300 focus:border-primary-300 sm:text-lg shadow-sm transition duration-150 ease-in-out"
-                  placeholder="Search by title, company, skills, or location..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* States */}
-            {serverError ? (
-              <div className="max-w-2xl mx-auto bg-red-500/10 border border-red-500/30 rounded-xl p-6 text-center">
-                <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                <h3 className="text-lg font-bold text-red-400">Database Connection Error</h3>
-                <p className="text-red-300 mt-2">{serverError}</p>
-                <p className="text-red-400/80 text-sm mt-2">Have you configured POSTGRES_URL in Vercel?</p>
-              </div>
-            ) : filteredJobs.length === 0 ? (
-              <div className="max-w-2xl mx-auto bg-white/5 border border-accent-200/50 rounded-xl p-10 text-center shadow-sm">
-                <Search className="w-16 h-16 text-neutral-400 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-accent-300">No jobs found</h3>
-                <p className="text-neutral-100 mt-2">
-                  {searchQuery || categories.length || seniorities.length || locations.length || providers.length 
-                    ? "We couldn't find any jobs matching your criteria. Try adjusting your filters." 
-                    : "The database is empty or hasn't synced yet."}
-                </p>
-              </div>
-            ) : (
-              <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-                {filteredJobs.map((job: any) => {
-                  let parsedTags = [];
-                  try {
-                      parsedTags = typeof job.tags_json === 'string' ? JSON.parse(job.tags_json) : (job.tags_json || []);
-                  } catch (e) {}
-
-                  // Deduplicate remote tag
-                  parsedTags = parsedTags.filter((tag: string) => tag.toLowerCase() !== 'remote');
-
-                  return (
-                  <div key={job.id} className="bg-white/10 overflow-hidden rounded-xl shadow-sm border border-accent-200/50 hover:shadow-md transition-shadow duration-300 flex flex-col">
-                    <div className="p-6 flex-grow">
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary-500/20 text-primary-200 capitalize border border-primary-500/30">
-                          {job.source}
-                        </span>
-                        <span className="text-xs text-neutral-300 flex items-center">
-                          <Calendar className="w-3 h-3 mr-1 text-primary-300" />
-                          {formatDate(job.first_seen_at)}
-                        </span>
-                      </div>
-                      
-                      <h3 className="text-xl font-bold text-primary-200 mb-2 line-clamp-2">
-                        {job.title}
-                      </h3>
-                      
-                      <div className="space-y-2 mb-4">
-                        {job.company && (
-                          <div className="flex items-center text-sm text-neutral-100">
-                            <Building className="w-4 h-4 mr-2 text-neutral-400" />
-                            <span className="font-medium text-neutral-50 line-clamp-1">{job.company}</span>
-                          </div>
-                        )}
-                        
-                        {job.location && (
-                          <div className="flex items-center text-sm text-neutral-100">
-                            <MapPin className="w-4 h-4 mr-2 text-neutral-400" />
-                            <span className="line-clamp-1">{job.location}</span>
-                            {job.is_remote === 1 && (
-                              <span className="ml-2 inline-flex flex-shrink-0 items-center px-2 py-0.5 rounded text-xs font-medium bg-accent-600/20 text-accent-300 border border-accent-600/30">
-                                Remote
-                              </span>
-                            )}
-                          </div>
-                        )}
-                        
-                        {job.job_type && (
-                          <div className="flex items-center text-sm text-neutral-100">
-                            <Briefcase className="w-4 h-4 mr-2 text-neutral-400" />
-                            <span className="line-clamp-1">{job.job_type}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {parsedTags.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-4">
-                          {parsedTags.slice(0, 3).map((tag: string, i: number) => (
-                            <span key={i} className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-white/5 text-neutral-300 border border-white/10 line-clamp-1">
-                              {tag}
-                            </span>
-                          ))}
-                          {parsedTags.length > 3 && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-white/5 text-neutral-400 border border-white/10">
-                              +{parsedTags.length - 3} more
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="px-6 py-4 bg-black/20 border-t border-white/5 mt-auto">
-                      <Button
-                        onClick={() => window.open(job.url, '_blank')}
-                        intent="accent"
-                        variant="outlined"
-                        size="md"
-                        className="w-full border-white/20 text-white hover:text-accent-200"
-                        iconRight={<ExternalLink className="w-4 h-4" />}
-                      >
-                        Apply Now
-                      </Button>
-                    </div>
-
-                  </div>
-                )})}
-              </div>
-            )}
-          </main>
+          {/* Companies Dropdown */}
+          <CustomSelect
+            value={selectedCompany}
+            onChange={setSelectedCompany}
+            placeholder="All Companies"
+            options={uniqueCompanies.map(c => ({ label: c, value: c }))}
+          />
+          
         </div>
+
+        {serverError && (
+          <div className="max-w-2xl mx-auto bg-red-500/10 border border-red-500/30 rounded-xl p-6 text-center mb-8">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-red-400">Database Connection Error</h3>
+            <p className="text-red-300 mt-2">{serverError}</p>
+          </div>
+        )}
+
+        {/* Job Grid */}
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          {filteredJobs.map((job: JobData) => {
+            
+            let parsedTags = [];
+            try {
+                parsedTags = typeof job.tags_json === 'string' ? JSON.parse(job.tags_json) : (job.tags_json || []);
+            } catch {}
+            
+            // Extract some mockup tags for display matching Figma
+            const seniority = parsedTags.find((t: string) => t.toLowerCase().includes('senior') || t.toLowerCase().includes('junior') || t.toLowerCase().includes('mid')) || 'Mid-Level';
+            const discipline = parsedTags.filter((t: string) => !t.toLowerCase().includes('senior') && !t.toLowerCase().includes('junior') && !t.toLowerCase().includes('mid')).slice(0, 3).join(', ') || 'Engineering';
+            const locationShort = (job.location?.includes('Egypt') || job.location?.includes('Cairo')) ? 'EG' : 'Remote';
+            
+            return (
+              <div 
+                key={job.id} 
+                onClick={() => window.open(job.url, '_blank')}
+                className="bg-[#151c2c]/80 backdrop-blur-sm border border-white/5 hover:border-white/10 hover:bg-[#1a2336] transition-all cursor-pointer rounded-2xl p-6 flex flex-col relative group"
+              >
+                {/* Top Row: Logo and EG Badge */}
+                <div className="flex items-start justify-between mb-5">
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold text-white shadow-sm ${getCompanyColor(job.company || '')}`}>
+                    {job.company ? job.company.charAt(0).toUpperCase() : 'C'}
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <div className="px-2.5 py-1 rounded bg-white/5 border border-white/10 text-neutral-300 text-xs font-bold tracking-wider">
+                      EG
+                    </div>
+                  </div>
+                </div>
+
+                {/* Title and Company */}
+                <h3 className="text-white font-bold text-[17px] leading-snug mb-1.5 line-clamp-2">
+                  {job.title}
+                </h3>
+                <p className="text-neutral-400 text-sm mb-6">
+                  {job.company || 'Unknown Company'}
+                </p>
+
+                {/* Tags (Bottom) */}
+                <div className="mt-auto flex flex-wrap gap-2">
+                  
+                  {/* Seniority */}
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
+                    <User className="w-3.5 h-3.5" />
+                    <span className="text-[11px] font-bold">{seniority}</span>
+                  </div>
+                  
+                  {/* Job Type */}
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                    <Briefcase className="w-3.5 h-3.5" />
+                    <span className="text-[11px] font-bold">{job.job_type || 'Full-time'}</span>
+                  </div>
+                  
+                  {/* Discipline / Tags */}
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 max-w-[200px]">
+                    <Code className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span className="text-[11px] font-bold truncate">{discipline}</span>
+                  </div>
+                  
+                  {/* Location Code */}
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400">
+                    <Globe className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span className="text-[11px] font-bold">{locationShort}</span>
+                  </div>
+                  
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        
       </div>
     </div>
   );
