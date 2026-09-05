@@ -1,6 +1,11 @@
+import { Suspense } from "react";
 import ResearchTabsClient from "./ResearchTabsClient";
 import ResearchInfoCard, { ResearchInfoCardProps } from "./ResearchInfoCard";
 import ResearchContent from "./ResearchContent";
+import {
+  PublicationsPanel,
+  PublicationsPanelSkeleton,
+} from "./publications";
 import { TabType } from "./Research.type";
 
 const RESEARCH_DATA: Record<TabType, ResearchInfoCardProps> = {
@@ -18,6 +23,11 @@ const RESEARCH_DATA: Record<TabType, ResearchInfoCardProps> = {
     title: "Discover Academic Papers",
     description:
       " Explore academic papers and citation networks across top journals and research platforms.",
+  },
+  publications: {
+    title: "Compare Publications",
+    description:
+      "Filter journals and transactions by category, access model, metrics, fees and review speed to find where to submit.",
   },
   projects: {
     title: "Explore Graduation Projects",
@@ -42,7 +52,13 @@ const ResearchContainer = ({ activeTab }: { activeTab: TabType }) => {
       <ResearchTabsClient activeTab={activeTab} />
 
       {/* Content */}
-      <ResearchContent activeTab={activeTab} />
+      {activeTab === "publications" ? (
+        <Suspense fallback={<PublicationsPanelSkeleton />}>
+          <PublicationsPanel />
+        </Suspense>
+      ) : (
+        <ResearchContent activeTab={activeTab} />
+      )}
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import { User } from "@/src/components/Icons/User";
 import { Document } from "@/src/components/Icons/Document";
 import { Browser } from "@/src/components/Icons/Browser";
+import { Library } from "lucide-react";
 import { FC } from "react";
 import LightingGlow from "@/src/components/ui/LightingGlow/LightingGlow";
 
@@ -23,6 +24,7 @@ const ResearchInfoCard: FC<ResearchInfoCardProps> = ({
   const renderIcon = () => {
     if (title.includes("Researchers")) return <User />;
     if (title.includes("Papers")) return <Document />;
+    if (title.includes("Publications")) return <Library className="size-8" />;
     if (title.includes("Projects")) return <Browser />;
   };
   return (
