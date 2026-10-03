@@ -19,6 +19,8 @@ const FilterPill = ({
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const panelId = useId();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [offset, setOffset] = useState(0);
   const isActive = activeCount > 0;
 
   useEffect(() => {
@@ -28,7 +30,10 @@ const FilterPill = ({
       if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
     };
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
     };
 
     document.addEventListener("mousedown", handlePointerDown);
@@ -43,10 +48,17 @@ const FilterPill = ({
     <div ref={containerRef} className="relative">
       <button
         type="button"
-        onClick={() => setOpen((value) => !value)}
+        ref={triggerRef}
+        onClick={() => {
+          const left = containerRef.current?.getBoundingClientRect().left ?? 0;
+          setOffset(
+            Math.max(8 - left, Math.min(0, window.innerWidth - left - 280 - 8)),
+          );
+          setOpen((value) => !value);
+        }}
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
-        className={`px-4 py-2 rounded-full border text-sm flex items-center gap-2 cursor-pointer ${
+        className={`px-4 py-2 rounded-full border text-sm flex items-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-accent-300 ${
           isActive
             ? "border-accent-400 text-accent-200 bg-accent-400/10"
             : "border-neutral-400 text-neutral-300"
@@ -64,6 +76,7 @@ const FilterPill = ({
       {open && (
         <div
           id={panelId}
+          style={{ left: offset }}
           className="absolute left-0 top-full mt-2 z-30 w-70 rounded-2xl border border-neutral-400 bg-neutral-800 p-4"
         >
           <div className="flex items-center justify-between gap-2 mb-3">

@@ -76,24 +76,3 @@ interface PricingLike {
 export function formatNumber(value: number | null, suffix = ""): string {
   return value === null ? "—" : `${value}${suffix}`;
 }
-
-/**
- * @deprecated Backend now handles text search via the `/publication/search`
- * endpoint (`q` param). Keep this only as a fallback until backend search is
- * verified working; do not use it for new filtering logic.
- */
-export function matchesSearch(
-  publication: Publication,
-  query: string,
-): boolean {
-  const term = query.trim().toLowerCase();
-  if (!term) return true;
-
-  return [
-    publication.title,
-    publication.acronym,
-    publication.publisher,
-    publication.subCategory?.name,
-    publication.subCategory?.domain?.name,
-  ].some((field) => field?.toLowerCase().includes(term));
-}

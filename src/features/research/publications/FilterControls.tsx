@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { NumericRange, RangeValue } from "./publication.type";
 
 interface OptionListProps<T extends string | number> {
@@ -79,9 +79,11 @@ export function NumericField({
 }: NumericFieldProps) {
   const [draft, setDraft] = useState(() => toText(value));
 
-  useEffect(() => {
+  const [previousValue, setPreviousValue] = useState(value);
+  if (value !== previousValue) {
+    setPreviousValue(value);
     setDraft(toText(value));
-  }, [value]);
+  }
 
   return (
     <input
@@ -152,7 +154,8 @@ export function RangeField({
   const high = clamp(value.max ?? bound.max, bound.min, bound.max);
 
   const round = (raw: number) => Number(raw.toFixed(decimalsOf(step)));
-  const percent = (raw: number) => (span <= 0 ? 0 : ((raw - bound.min) / span) * 100);
+  const percent = (raw: number) =>
+    span <= 0 ? 0 : ((raw - bound.min) / span) * 100;
 
   const setLow = (raw: number) =>
     onChange({ min: round(Math.min(raw, high)), max: round(high) });

@@ -1,6 +1,7 @@
 "use client";
 
 import { FC } from "react";
+import ResearchPanel from "./shared/ResearchPanel";
 import { Input } from "@/src/components/ui/InputField/Input";
 import dynamic from "next/dynamic";
 import notFoundAnimation from "@/src/components/assets/NotFound.json";
@@ -45,15 +46,15 @@ const ResearchContent: FC<ResearchContentProps> = ({ activeTab }) => {
   const currentContent = CONTENT_DATA[activeTab] || CONTENT_DATA.researchers;
 
   return (
-    <div className="w-full bg-transparent border-2 border-accent-200 rounded-b-2xl rounded-tr-2xl p-6 min-h-100 flex flex-col gap-12 relative -mt-px">
+    <ResearchPanel>
       {/* Top action bar */}
-      <div className="flex gap-4 items-center">
+      <div className="flex flex-wrap gap-4 items-center">
         <div className="w-75">
           <Input placeholder={`Search ${currentContent.placeholder}`} />
         </div>
 
         {/* Dropdowns */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {currentContent.filters.map((filter) => (
             <button
               key={filter}
@@ -79,7 +80,7 @@ const ResearchContent: FC<ResearchContentProps> = ({ activeTab }) => {
         </h3>
         <p className="text-neutral-100">{currentContent.emptyDesc}</p>
       </div>
-    </div>
+    </ResearchPanel>
   );
 };
 
