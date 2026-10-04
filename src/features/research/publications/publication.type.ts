@@ -10,12 +10,7 @@ export type PublicationAccessType =
   | "Subscriber_Based_Access";
 
 export type LicenseType =
-  | "CC"
-  | "CC_BY"
-  | "CC_BY_SA"
-  | "CC_BY_NC"
-  | "CC_BY_ND"
-  | "CC_BY_NC_ND";
+  "CC" | "CC_BY" | "CC_BY_SA" | "CC_BY_NC" | "CC_BY_ND" | "CC_BY_NC_ND";
 
 export type PublicationType = "Transaction" | "Magazine" | "Journal" | "Letter";
 
@@ -107,20 +102,23 @@ export interface Publication {
   journalScope: string | null;
   imprint: string | null;
   subBucket: string | null;
+  createdAt: string;
+  updatedAt: string;
   subCategory: PublicationSubCategory;
-  yearlyMetrics: PublicationYearlyMetric[];
-  pricings: PublicationPricing[];
-  editorialStats: PublicationEditorialStat[];
+  yearlyMetrics?: PublicationYearlyMetric[];
+  pricings?: PublicationPricing[];
+  editorialStats?: PublicationEditorialStat[];
 }
 
-export interface PublicationFilterResponse {
+export interface PublicationsResponse {
+  success: boolean;
   data: Publication[];
-  page: number;
-  limit: number;
-  totalItems: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }
 
 export interface NumericRange {

@@ -2,10 +2,8 @@ import { Suspense } from "react";
 import ResearchTabsClient from "./ResearchTabsClient";
 import ResearchInfoCard, { ResearchInfoCardProps } from "./ResearchInfoCard";
 import ResearchContent from "./ResearchContent";
-import {
-  PublicationsPanel,
-  PublicationsPanelSkeleton,
-} from "./publications";
+import { PublicationsPanel, PublicationsPanelSkeleton } from "./publications";
+import { ProjectsPanel } from "./projects";
 import { TabType } from "./Research.type";
 
 const RESEARCH_DATA: Record<TabType, ResearchInfoCardProps> = {
@@ -27,7 +25,7 @@ const RESEARCH_DATA: Record<TabType, ResearchInfoCardProps> = {
   publications: {
     title: "Compare Publications",
     description:
-      "Filter journals and transactions by category, access model, metrics, fees and review speed to find where to submit.",
+      "Browse journals and transactions, compare categories and access models, and find a publication for your research.",
   },
   projects: {
     title: "Explore Graduation Projects",
@@ -56,6 +54,8 @@ const ResearchContainer = ({ activeTab }: { activeTab: TabType }) => {
         <Suspense fallback={<PublicationsPanelSkeleton />}>
           <PublicationsPanel />
         </Suspense>
+      ) : activeTab === "projects" ? (
+        <ProjectsPanel />
       ) : (
         <ResearchContent activeTab={activeTab} />
       )}
