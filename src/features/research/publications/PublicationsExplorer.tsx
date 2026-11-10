@@ -1,14 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
 import notFoundAnimation from "@/src/components/assets/NotFound.json";
 import { apiGet } from "@/src/lib/api-client";
 import { useDebouncedValue } from "@/src/hooks/useDebouncedValue";
+import CatalogLayout from "@/src/components/catalog/CatalogLayout";
+import { Input } from "@/src/components/ui/InputField/Input";
 import PublicationFilterBar from "./PublicationFilterBar";
-import PublicationsTable from "./PublicationsTable";
-import { buildSearchParams } from "./publication.api";
+import PublicationCard from "./PublicationCard";
+import { CATALOG_GRID } from "@/src/components/catalog/CatalogCard";
+import {
+  buildSearchParams,
+  countActivePublicationFilters,
+} from "./publication.api";
 import { EMPTY_FILTERS } from "./publication.constants";
 import type {
   Publication,
@@ -26,18 +32,17 @@ interface PublicationsExplorerProps {
   initialPublications: Publication[];
 }
 
-type Status = "idle" | "loading" | "error";
-
 const PublicationsExplorer = ({
   domains,
   ranges,
   initialPublications,
 }: PublicationsExplorerProps) => {
   const [filters, setFilters] = useState<PublicationFilterState>(EMPTY_FILTERS);
-  const [publications, setPublications] =
-    useState<Publication[]>(initialPublications);
-  const [status, setStatus] = useState<Status>("idle");
-  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<{
+    key: string;
+    data?: Publication[];
+    error?: string;
+  }>();
   const [reloadToken, setReloadToken] = useState(0);
 
   const debouncedSearch = useDebouncedValue(filters.search, 300);
@@ -47,54 +52,75 @@ const PublicationsExplorer = ({
     ranges,
   ).toString();
 
-  const loadedKeyRef = useRef(queryKey);
+  const requestKey = `${queryKey}:${reloadToken}`;
+  const initialKey = `${buildSearchParams(EMPTY_FILTERS, ranges)}:0`;
+  const current =
+    requestKey === initialKey
+      ? { key: initialKey, data: initialPublications, error: undefined }
+      : result;
+  const loading =
+    current?.key !== requestKey || filters.search !== debouncedSearch;
+  const error = current?.key === requestKey ? current.error : undefined;
+  const visible = current?.key === requestKey ? current.data ?? [] : [];
 
   useEffect(() => {
-    if (loadedKeyRef.current === queryKey && reloadToken === 0) return;
+    if (requestKey === initialKey) return;
 
     const controller = new AbortController();
-    setStatus("loading");
-    setError(null);
 
     apiGet<PublicationFilterResponse>(`/publication/search?${queryKey}`, {
       signal: controller.signal,
     })
       .then((data) => {
-        loadedKeyRef.current = queryKey;
-        setPublications(data.data ?? []);
-        setStatus("idle");
+        if (controller.signal.aborted) return;
+        setResult({ key: requestKey, data: data.data ?? [] });
       })
       .catch((cause: unknown) => {
         if (controller.signal.aborted) return;
-        setError(
-          cause instanceof Error
-            ? cause.message
-            : "Something went wrong loading publications.",
-        );
-        setStatus("error");
+        setResult({
+          key: requestKey,
+          error:
+            cause instanceof Error
+              ? cause.message
+              : "Something went wrong loading publications.",
+        });
       });
 
     return () => controller.abort();
-  }, [queryKey, reloadToken]);
-
-  const visible = publications;
+  }, [queryKey, requestKey, initialKey]);
 
   return (
-    <div className="flex flex-col gap-6">
-      <PublicationFilterBar
-        filters={filters}
-        onChange={setFilters}
-        domains={domains}
-        ranges={ranges}
-      />
-
+    <CatalogLayout
+      search={
+        <Input
+          aria-label="Search publications"
+          placeholder="Search by title, acronym or publisher"
+          value={filters.search}
+          onChange={(event) =>
+            setFilters({ ...filters, search: event.target.value })
+          }
+        />
+      }
+      filters={
+        <PublicationFilterBar
+          filters={filters}
+          onChange={setFilters}
+          domains={domains}
+          ranges={ranges}
+        />
+      }
+      activeFilterCount={countActivePublicationFilters(filters, ranges)}
+      resultsLabel="Publication results"
+    >
       <div className="flex items-center justify-between gap-4 min-h-6">
-        <span className="text-sm text-neutral-300">
-          {status === "loading"
+        <span role="status" className="text-sm text-neutral-300">
+          {loading
             ? "Loading publications…"
-            : `${visible.length} publication${visible.length === 1 ? "" : "s"}`}
+            : error
+              ? "Publications unavailable"
+              : `${visible.length} publication${visible.length === 1 ? "" : "s"}`}
         </span>
-        {status === "loading" && (
+        {loading && (
           <Loader2
             className="size-4 animate-spin text-accent-300"
             aria-hidden="true"
@@ -102,7 +128,11 @@ const PublicationsExplorer = ({
         )}
       </div>
 
-      {status === "error" ? (
+      {loading ? (
+        <div role="status" className="py-16 text-center text-neutral-200">
+          Updating publications…
+        </div>
+      ) : error ? (
         <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
           <h3 className="text-xl font-semibold text-danger-300">
             Couldn&apos;t load publications
@@ -131,16 +161,17 @@ const PublicationsExplorer = ({
           </p>
         </div>
       ) : (
-        <div
-          className={`transition-opacity duration-300 ${status === "loading" ? "opacity-60" : "opacity-100"}`}
-        >
-          <PublicationsTable
-            publications={visible}
-            currency={filters.currency}
-          />
+        <div className={CATALOG_GRID}>
+          {visible.map((publication) => (
+            <PublicationCard
+              key={publication.id}
+              publication={publication}
+              currency={filters.currency}
+            />
+          ))}
         </div>
       )}
-    </div>
+    </CatalogLayout>
   );
 };
 
