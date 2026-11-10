@@ -28,6 +28,29 @@ function activeRange(
   return isRangeActive(value, bound) ? value : undefined;
 }
 
+export function countActivePublicationFilters(
+  filters: PublicationFilterState,
+  ranges: PublicationFilterRanges,
+): number {
+  return (
+    filters.categoryIds.length +
+    filters.publishingModel.length +
+    filters.licensing.length +
+    filters.quartiles.length +
+    (filters.maxCost !== undefined ? 1 : 0) +
+    [
+      isRangeActive(filters.impactFactor, ranges.impactFactor),
+      isRangeActive(filters.citeScore, ranges.citeScore),
+      isRangeActive(filters.sjr, ranges.sjr),
+      isRangeActive(filters.firstDecisionWeeks, ranges.firstDecisionWeeks),
+      isRangeActive(
+        filters.submissionToAcceptanceWeeks,
+        ranges.submissionToAcceptanceWeeks,
+      ),
+    ].filter(Boolean).length
+  );
+}
+
 function appendRange(
   params: URLSearchParams,
   prefix: string,

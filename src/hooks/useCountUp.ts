@@ -23,23 +23,21 @@ export default function useCountUp(
   const target = parsed?.target;
   const suffix = parsed?.suffix;
 
-  const [display, setDisplay] = useState(() =>
-    parsed ? `${parsed.prefix}0${parsed.suffix}` : (value ?? "-"),
-  );
+  const [animation, setAnimation] = useState(() => ({
+    value,
+    text: parsed ? `${parsed.prefix}0${parsed.suffix}` : (value ?? "-"),
+  }));
   const frameRef = useRef<number>(null);
 
   useEffect(() => {
-    if (target === undefined) {
-      setDisplay(value ?? "-");
-      return;
-    }
+    if (target === undefined) return;
 
     const startTime = performance.now();
 
     const tick = (now: number) => {
-      const progress = Math.min((now - startTime) / duration, 1);
+      const progress = duration <= 0 ? 1 : Math.min((now - startTime) / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(`${prefix}${Math.floor(eased * target)}${suffix}`);
+      setAnimation({ value, text: `${prefix}${Math.floor(eased * target)}${suffix}` });
 
       if (progress < 1) {
         frameRef.current = requestAnimationFrame(tick);
@@ -53,5 +51,8 @@ export default function useCountUp(
     };
   }, [prefix, target, suffix, value, duration]);
 
-  return display;
+  if (target === undefined) return value ?? "-";
+  return animation.value === value
+    ? animation.text
+    : `${prefix}0${suffix}`;
 }

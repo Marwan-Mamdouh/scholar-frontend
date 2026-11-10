@@ -1,7 +1,11 @@
 <!-- BEGIN:nextjs-agent-rules -->
+
 # This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
 <!-- END:nextjs-agent-rules -->
 
 # Scholar Frontend — Agent Guide
@@ -15,7 +19,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `npm run dev` — dev server at http://localhost:3000
 - `npm run build` — production build (also type-checks via Next)
 - `npm run lint` — ESLint (flat config in `eslint.config.mjs`)
-- **No test suite, no `typecheck` script, and no CI workflows exist.** For a standalone type check use `npx tsc --noEmit`.
+- `npm run typecheck` — standalone TypeScript check. No test suite or CI workflows exist.
 
 ## Backend dependency (corrects stale README)
 - Data features call a **separate backend** through `NEXT_PUBLIC_API_URL` (default `http://localhost:4000/api`) — see `src/lib/api-client.ts`. Set this in `.env` for live data.
@@ -35,7 +39,6 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Type-of-change labels in PRs: `feat`, `fix`, `refactor`, `chore`, `qa`.
 
 ## Tooling notes
-- Figma MCP is configured in `opencode.json` and reads a **gitignored** `figma-api-key` file — never commit it.
-- Better Auth MCP server (`https://mcp.better-auth.com/mcp`) is also configured; use it for auth-related lookups.
+- The obsolete `opencode.json` configuration has been removed. Use the tools available in the current session; never commit local API-key files.
 - `app.architecture.md` describes the *intended* layout but is partly aspirational (Redux/axios/Prisma). Trust `package.json` and `src/` over that doc.
 - `next.config.ts` sets `allowedDevOrigins: ['192.168.100.200']` — expected for the maintainer's LAN; do not remove or widen without asking.

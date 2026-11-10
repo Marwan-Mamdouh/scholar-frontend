@@ -2,22 +2,15 @@ import { Suspense } from "react";
 import ResearchTabsClient from "./ResearchTabsClient";
 import ResearchInfoCard, { ResearchInfoCardProps } from "./ResearchInfoCard";
 import ResearchContent from "./ResearchContent";
-import {
-  PublicationsPanel,
-  PublicationsPanelSkeleton,
-} from "./publications";
+import { PublicationsPanel, PublicationsPanelSkeleton } from "./publications";
 import { TabType } from "./Research.type";
+import { fetchCatalogSummary } from "@/src/lib/catalog";
 
 const RESEARCH_DATA: Record<TabType, ResearchInfoCardProps> = {
   researchers: {
     title: "Explore Researchers",
     description:
       "Browse academic profiles, research areas, and publications to find experts in your field",
-    stats: [
-      { label: "Researchers", value: 879 },
-      { label: "Universities", value: 481 },
-      { label: "Topics", value: 17 },
-    ],
   },
   papers: {
     title: "Discover Academic Papers",
@@ -36,16 +29,25 @@ const RESEARCH_DATA: Record<TabType, ResearchInfoCardProps> = {
   },
 };
 
-const ResearchContainer = ({ activeTab }: { activeTab: TabType }) => {
+const ResearchContainer = async ({ activeTab }: { activeTab: TabType }) => {
   const currentInfo = RESEARCH_DATA[activeTab];
+  const summary =
+    activeTab === "researchers" ? await fetchCatalogSummary() : null;
+  const stats = summary
+    ? [
+        { label: "Researchers", value: summary.researchers },
+        { label: "Universities", value: summary.universities },
+        { label: "Topics", value: summary.topics },
+      ]
+    : undefined;
 
   return (
-    <div className="w-full max-w-7xl mx-auto flex flex-col pt-8 pb-24 px-4 md:px-8 tracking-eyebrow">
+    <div className="flex w-full min-w-0 flex-col gap-6">
       {/* Info Card */}
       <ResearchInfoCard
         title={currentInfo.title}
         description={currentInfo.description}
-        stats={currentInfo.stats}
+        stats={stats}
       />
 
       {/* Tabs */}
@@ -57,7 +59,7 @@ const ResearchContainer = ({ activeTab }: { activeTab: TabType }) => {
           <PublicationsPanel />
         </Suspense>
       ) : (
-        <ResearchContent activeTab={activeTab} />
+        <ResearchContent key={activeTab} activeTab={activeTab} />
       )}
     </div>
   );
